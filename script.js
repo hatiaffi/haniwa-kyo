@@ -221,92 +221,60 @@
   // 直近に出した位置（近くへの連打表示を防ぐ）
   const recentVoiceSpots = [];
 
-  // 縦書き用：日本語として自然な位置で改行（禁則に配慮）
+  // 縦書き用：句読点・助詞など、日本語として自然な位置で改行
   const breakVerticalText = (raw) => {
     const text = String(raw || "").replace(/\s+/g, "");
     const chars = [...text];
-    if (chars.length <= 9) return text;
+    if (chars.length <= 8) return text;
 
-    // この文字のあとで切ると自然
-    const afterOk = new Set([
-      "。",
-      "、",
-      "．",
-      "！",
-      "？",
-      "!",
-      "?",
-      "を",
-      "に",
-      "は",
-      "が",
-      "で",
-      "と",
-      "も",
-      "へ",
-      "や",
-      "の",
-      "か",
-      "ね",
-      "よ",
-      "な",
-      "ば",
-      "て",
-      "で",
-      "た",
-      "だ",
-      "る",
-      "す",
-      "く",
-      "い",
-      "う",
-      "ん",
-      "っ",
-      "ー",
-      "」",
-      "』",
-      "）",
-      "〕",
-    ]);
-    // 行頭に来てほしくない（禁則）
+    // 行頭禁則
     const noLineStart = new Set([
-      "。",
-      "、",
-      "．",
-      "！",
-      "？",
-      "!",
-      "?",
-      "ー",
-      "ぁ",
-      "ぃ",
-      "ぅ",
-      "ぇ",
-      "ぉ",
-      "っ",
-      "ゃ",
-      "ゅ",
-      "ょ",
-      "ァ",
-      "ィ",
-      "ゥ",
-      "ェ",
-      "ォ",
-      "ッ",
-      "ャ",
-      "ュ",
-      "ョ",
-      "」",
-      "』",
-      "）",
-      "〕",
+      "。", "、", "．", "，", "！", "？", "!", "?", "ー", "〜", "…",
+      "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "っ", "ゃ", "ゅ", "ょ", "ゎ",
+      "ァ", "ィ", "ゥ", "ェ", "ォ", "ッ", "ャ", "ュ", "ョ", "ヮ",
+      "」", "』", "）", "〕", "】", "］", "〉", "》",
     ]);
-    // 行末に来てほしくない
-    const noLineEnd = new Set(["「", "『", "（", "〔", "【"]);
+    // 行末禁則
+    const noLineEnd = new Set(["「", "『", "（", "〔", "【", "［", "〈", "《"]);
 
-    const ideal = 8;
-    const minLen = 5;
-    const maxLen = 11;
+    // 2文字助詞・接続（この並びの直後で切ると自然）
+    const pairAfter = new Set([
+      "から", "まで", "より", "など", "ので", "のに", "けど", "ても", "でも",
+      "には", "では", "とは", "にも", "へも", "をも", "とか", "って", "たり",
+      "たら", "なら", "れば", "かも", "ほど", "だけ", "ばかり",
+      "して", "きて", "みて", "いて",
+    ]);
+
+    // 1文字：強く切ってよい（句読点・終助詞まわり）
+    const strongAfter = new Set(["。", "．", "！", "？", "!", "?", "、", "，", "」", "』", "）"]);
+    // 1文字助詞（語中のい・う・ん等では切らない）
+    const particleAfter = new Set(["を", "に", "は", "が", "で", "と", "も", "へ", "や", "の", "か"]);
+    // 接続のて・で（やや弱め）
+    const softAfter = new Set(["て", "で", "た", "だ", "ね", "よ", "さ", "ば", "り"]);
+
+    const scoreBreakAfter = (i) => {
+      if (i < 0 || i >= chars.length - 1) return -Infinity;
+      const ch = chars[i];
+      const prev = chars[i - 1];
+      const next = chars[i + 1];
+      if (noLineEnd.has(ch)) return -Infinity;
+      if (next && noLineStart.has(next)) return -Infinity;
+
+      let score = 0;
+      const pair = (prev || "") + ch;
+      if (pairAfter.has(pair)) score += 18;
+      if (strongAfter.has(ch)) score += 22;
+      else if (particleAfter.has(ch)) score += 14;
+      else if (softAfter.has(ch)) score += 7;
+      else score -= 4; // 語の途中はなるべく避ける
+
+      // 「、」の直後など、すでに切れている並びはさらに加点しない（重複しない）
+      return score;
+    };
+
+    const ideal = 7;
+    const minLen = 4;
+    const maxLen = 10;
     const lines = [];
     let start = 0;
 
@@ -319,25 +287,21 @@
 
       let best = -1;
       let bestScore = -Infinity;
-      const from = start + minLen;
-      const to = Math.min(chars.length - 1, start + maxLen);
+      const from = start + minLen - 1;
+      const to = Math.min(chars.length - 2, start + maxLen - 1);
 
       for (let i = from; i <= to; i += 1) {
-        const ch = chars[i];
-        const next = chars[i + 1];
-        if (noLineEnd.has(ch)) continue;
-        if (next && noLineStart.has(next)) continue;
+        let score = scoreBreakAfter(i);
+        if (score === -Infinity) continue;
 
-        let score = 0;
-        if (afterOk.has(ch)) score += 8;
-        if (ch === "。" || ch === "、" || ch === "！" || ch === "？") score += 12;
-        // 助詞のあと
-        if ("をにではがともへのかねよ".includes(ch)) score += 6;
-        // 理想長さに近いほど良い
-        score -= Math.abs(i - start + 1 - ideal) * 1.4;
-        // 残りが1〜2文字だけになる切り方は避ける
+        const len = i - start + 1;
+        score -= Math.abs(len - ideal) * 1.6;
+        // 末尾が極端に短くなる切り方を避ける
         const left = chars.length - (i + 1);
-        if (left > 0 && left < 3) score -= 10;
+        if (left > 0 && left < 3) score -= 14;
+        if (left >= 3 && left <= maxLen && left < minLen + 1) score -= 4;
+        // 句読点直後は特に優先
+        if (strongAfter.has(chars[i])) score += 4;
 
         if (score > bestScore) {
           bestScore = score;
@@ -345,16 +309,25 @@
         }
       }
 
-      // 良い位置がなければ、禁則だけ守って切る
-      if (best < 0) {
-        best = Math.min(chars.length - 1, start + ideal - 1);
-        while (best > start + minLen - 1 && noLineEnd.has(chars[best])) best -= 1;
+      // 良い境界がなければ、禁則だけ守って理想長付近で切る
+      if (best < 0 || bestScore < 0) {
+        best = Math.min(chars.length - 2, start + ideal - 1);
+        while (best > start + minLen - 2 && (noLineEnd.has(chars[best]) || (chars[best + 1] && noLineStart.has(chars[best + 1])))) {
+          best -= 1;
+        }
         while (
-          best < chars.length - 1 &&
+          best < chars.length - 2 &&
           chars[best + 1] &&
           noLineStart.has(chars[best + 1])
         ) {
           best += 1;
+        }
+        // それでも助詞境界があれば寄せる
+        for (let i = Math.min(to, start + maxLen - 1); i >= from; i -= 1) {
+          if (scoreBreakAfter(i) >= 14) {
+            best = i;
+            break;
+          }
         }
       }
 
@@ -378,8 +351,8 @@
     // 同時表示は2個まで
     if (!force && voiceField.querySelectorAll(".voice-bubble").length >= 2) return false;
 
-    // スマホは横書き多め（縦書きは場所を取りすぎて出にくい）
-    const useVertical = Math.random() < (isNarrow ? 0.22 : 0.5);
+    // スマホは縦書き多め、PCは半々
+    const useVertical = Math.random() < (isNarrow ? 0.65 : 0.5);
     const displayText = useVertical ? breakVerticalText(text) : text;
     const vLines = useVertical ? displayText.split("\n") : [];
     const plainLen = Math.max(1, text.replace(/[。、．！？!?\s　「」『』]/g, "").length);
