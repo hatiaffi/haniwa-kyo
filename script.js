@@ -366,27 +366,28 @@
   };
 
   const spawnVoiceBubble = (text, { isVow = false, force = false } = {}) => {
-    if (!voiceField || !voiceStage) return;
-    if (!force && reduceMotion) return;
-    if (!force && window.scrollY > window.innerHeight * 0.85) return;
+    if (!voiceField || !voiceStage) return false;
+    if (!force && reduceMotion) return false;
+    if (!force && window.scrollY > window.innerHeight * 0.85) return false;
 
     const fieldRect = voiceField.getBoundingClientRect();
     const stageRect = voiceStage.getBoundingClientRect();
-    if (fieldRect.width < 40 || stageRect.width < 40) return;
+    if (fieldRect.width < 40 || stageRect.width < 40) return false;
 
-    // 縦書き／横書きは完全ランダム（同じ文でも毎回どちらでも出る）
-    const useVertical = Math.random() < 0.5;
+    const isNarrow = fieldRect.width < 720 || isTouch;
+
+    // スマホは横書き多め（縦書きは場所を取りすぎて出にくい）
+    const useVertical = Math.random() < (isNarrow ? 0.22 : 0.5);
     const displayText = useVertical ? breakVerticalText(text) : text;
     const vLines = useVertical ? displayText.split("\n") : [];
     const plainLen = Math.max(1, text.replace(/[。、．！？!?\s　「」『』]/g, "").length);
 
-    // サイズ見積もり
-    let estW = Math.min(fieldRect.width * 0.55, isVow ? 280 : 240);
-    let estH = Math.min(140, 44 + Math.ceil(Math.min(text.length, 28) / 12) * 28);
+    // サイズ見積もり（狭い画面はコンパクトに）
+    let estW = Math.min(fieldRect.width * (isNarrow ? 0.4 : 0.55), isVow ? (isNarrow ? 200 : 280) : isNarrow ? 150 : 240);
+    let estH = Math.min(isNarrow ? 88 : 140, (isNarrow ? 34 : 44) + Math.ceil(Math.min(text.length, 28) / (isNarrow ? 14 : 12)) * (isNarrow ? 22 : 28));
     if (useVertical) {
-      // 1列あたり短め＋列数ぶん横に広がる
-      estH = Math.min(fieldRect.height * 0.5, 52 + Math.min(9, plainLen) * 24);
-      estW = Math.min(220, 40 + Math.max(1, vLines.length) * 34);
+      estH = Math.min(fieldRect.height * (isNarrow ? 0.3 : 0.5), (isNarrow ? 40 : 52) + Math.min(isNarrow ? 7 : 9, plainLen) * (isNarrow ? 18 : 24));
+      estW = Math.min(isNarrow ? 110 : 220, (isNarrow ? 28 : 40) + Math.max(1, vLines.length) * (isNarrow ? 24 : 34));
     }
 
     const hardBlocks = [];
@@ -409,24 +410,30 @@
       pushRect(list, el.getBoundingClientRect(), pad);
     };
 
-    // 「はにわ教／ただ静かに立つ／くらべず…」のうしろには出さない
-    pushEl(forbidden, document.querySelector(".hero-copy"), 18);
+    // 見出し文言だけ避ける（CTA込みの .hero-copy 全体はスマホで画面を埋めすぎる）
+    const textPad = isNarrow ? 6 : 14;
+    pushEl(forbidden, document.querySelector(".hero-copy .brand"), textPad);
+    pushEl(forbidden, document.querySelector(".hero-copy h1"), textPad);
+    pushEl(forbidden, document.querySelector(".hero-copy .lede"), textPad + 2);
     pushEl(hardBlocks, document.getElementById("site-header"), useVertical ? 2 : 4);
     pushEl(softBlocks, document.querySelector(".scroll-cue"), 6);
-    pushEl(softBlocks, document.getElementById("spin-hint"), 8);
+    pushEl(softBlocks, document.getElementById("spin-hint"), isNarrow ? 4 : 8);
+    pushEl(softBlocks, document.querySelector(".cta-group"), isNarrow ? 4 : 8);
     // 表示中の文言は広めに避ける（被り防止）
-    voiceField.querySelectorAll(".voice-bubble").forEach((b) => pushEl(forbidden, b, 56));
+    voiceField.querySelectorAll(".voice-bubble").forEach((b) => pushEl(forbidden, b, isNarrow ? 24 : 56));
 
     // はにわ本体の真後ろ（中央シルエット）は禁止。端への少しの被りはOK
     {
-      const left = stageRect.left + stageRect.width * 0.3;
-      const top = stageRect.top + stageRect.height * 0.08;
-      const width = stageRect.width * 0.4;
-      const height = stageRect.height * 0.78;
+      const xRatio = isNarrow ? 0.36 : 0.3;
+      const wRatio = isNarrow ? 0.28 : 0.4;
+      const left = stageRect.left + stageRect.width * xRatio;
+      const top = stageRect.top + stageRect.height * (isNarrow ? 0.12 : 0.08);
+      const width = stageRect.width * wRatio;
+      const height = stageRect.height * (isNarrow ? 0.62 : 0.78);
       pushRect(
         forbidden,
         { left, top, width, height, right: left + width, bottom: top + height },
-        6
+        isNarrow ? 2 : 6
       );
     }
 
@@ -434,13 +441,15 @@
     for (let i = recentVoiceSpots.length - 1; i >= 0; i -= 1) {
       if (recentVoiceSpots[i].until <= now) recentVoiceSpots.splice(i, 1);
     }
-    // 直近スポットから離す距離（やや緩めて散らす）
-    const minGap = Math.min(160, Math.max(90, Math.min(fieldRect.width, fieldRect.height) * 0.18));
+    // 直近スポットから離す距離（スマホは狭くて失敗しやすいので短め）
+    const minGap = isNarrow
+      ? Math.min(88, Math.max(48, Math.min(fieldRect.width, fieldRect.height) * 0.12))
+      : Math.min(160, Math.max(90, Math.min(fieldRect.width, fieldRect.height) * 0.18));
 
     const hits = (list, left, top, right, bottom) =>
       list.some((b) => left < b.right && right > b.left && top < b.bottom && bottom > b.top);
 
-    const scorePos = (localX, localY) => {
+    const scorePos = (localX, localY, { ignoreRecent = false } = {}) => {
       const left = fieldRect.left + localX - estW / 2;
       const top = fieldRect.top + localY - estH / 2;
       const right = left + estW;
@@ -459,11 +468,13 @@
 
       // 直近に出した位置の近くも不可
       let nearest = Infinity;
-      for (let i = 0; i < recentVoiceSpots.length; i += 1) {
-        const s = recentVoiceSpots[i];
-        const d = Math.hypot(localX - s.x, localY - s.y);
-        if (d < minGap) return -1;
-        if (d < nearest) nearest = d;
+      if (!ignoreRecent) {
+        for (let i = 0; i < recentVoiceSpots.length; i += 1) {
+          const s = recentVoiceSpots[i];
+          const d = Math.hypot(localX - s.x, localY - s.y);
+          if (d < minGap) return -1;
+          if (d < nearest) nearest = d;
+        }
       }
 
       let score = 40 + Math.random() * 40;
@@ -471,6 +482,12 @@
       if (hits(softBlocks, left, top, right, bottom)) score -= 35;
       // 既存スポットから遠いほど少し加点（決定打にはしない）
       if (nearest < Infinity) score += Math.min(24, (nearest - minGap) * 0.12);
+      // スマホははにわ周り・上半分をやや優先（コピー帯と被りにくい）
+      if (isNarrow) {
+        const dy = Math.abs(localY - cy);
+        if (localY < fieldRect.height * 0.55) score += 12;
+        if (dy < baseR * 0.55) score += 8;
+      }
       return score;
     };
 
@@ -490,47 +507,65 @@
       });
     };
 
-    for (let i = 0; i < 72; i += 1) {
+    const sampleN = isNarrow ? 110 : 72;
+    for (let i = 0; i < sampleN; i += 1) {
       pushCand(
         padX + Math.random() * Math.max(8, fieldRect.width - padX * 2),
         padY + Math.random() * Math.max(8, fieldRect.height - padY * 2)
       );
     }
     // はにわ周囲リングもランダムで少し足す（真後ろは score で落とす）
-    for (let i = 0; i < 24; i += 1) {
+    for (let i = 0; i < (isNarrow ? 40 : 24); i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = baseR * (0.28 + Math.random() * 0.72);
+      const radius = baseR * (0.22 + Math.random() * 0.85);
       pushCand(
         cx + Math.cos(angle) * radius,
-        cy + Math.sin(angle) * radius * (0.55 + Math.random() * 0.55)
+        cy + Math.sin(angle) * radius * (0.5 + Math.random() * 0.65)
       );
     }
+    // スマホは左右帯・上帯を明示的に足す
+    if (isNarrow) {
+      for (let t = 0.08; t <= 0.72; t += 0.08) {
+        pushCand(padX + 2, fieldRect.height * t);
+        pushCand(fieldRect.width - padX - 2, fieldRect.height * t);
+      }
+      for (let x = 0.12; x <= 0.88; x += 0.1) {
+        pushCand(fieldRect.width * x, padY + 6);
+        pushCand(fieldRect.width * x, Math.min(fieldRect.height * 0.42, cy - baseR * 0.15));
+      }
+    }
 
-    const valid = [];
+    const pickWeighted = (list) => {
+      if (!list.length) return null;
+      const total = list.reduce((sum, c) => sum + Math.max(1, c.score), 0);
+      let roll = Math.random() * total;
+      for (let i = 0; i < list.length; i += 1) {
+        roll -= Math.max(1, list[i].score);
+        if (roll <= 0) return list[i];
+      }
+      return list[Math.floor(Math.random() * list.length)];
+    };
+
+    let valid = [];
     candidates.forEach((c) => {
       const s = scorePos(c.x, c.y);
       if (s >= 0) valid.push({ ...c, score: s });
     });
 
-    // 有効候補からランダムに1つ（スコアで軽く重み付け）
-    let best = null;
-    if (valid.length) {
-      const total = valid.reduce((sum, c) => sum + Math.max(1, c.score), 0);
-      let roll = Math.random() * total;
-      for (let i = 0; i < valid.length; i += 1) {
-        roll -= Math.max(1, valid[i].score);
-        if (roll <= 0) {
-          best = valid[i];
-          break;
-        }
-      }
-      if (!best) best = valid[Math.floor(Math.random() * valid.length)];
+    // 空きがなければ直近距離を無視して再評価（スマホで沈黙しすぎない）
+    if (!valid.length) {
+      candidates.forEach((c) => {
+        const s = scorePos(c.x, c.y, { ignoreRecent: true });
+        if (s >= 0) valid.push({ ...c, score: s });
+      });
     }
 
-    // 空きがなければ出さない（被って出すより待つ）
+    let best = pickWeighted(valid);
+
+    // 空きがなければ出さない（被って出すより待つ）／誓いは強制配置
     if (!best) {
-      if (!force) return;
-      // 誓いは禁止領域を避けた候補からランダム
+      if (!force && !isNarrow) return false;
+      // 誓いやスマホは禁止領域だけ守ってランダム配置
       const forced = [];
       candidates.forEach((c) => {
         const left = fieldRect.left + c.x - estW / 2;
@@ -548,7 +583,7 @@
         if (hits(forbidden, left, top, right, bottom)) return;
         forced.push(c);
       });
-      if (!forced.length) return;
+      if (!forced.length) return false;
       best = forced[Math.floor(Math.random() * forced.length)];
     }
 
@@ -564,7 +599,7 @@
 
     const drift = 18 + Math.random() * 28;
     const side = best.side;
-    const lifeMs = ((isVow ? 13 : 11.5) + Math.random() * 2.5) * 1000;
+    const lifeMs = ((isVow ? 13 : isNarrow ? 10 : 11.5) + Math.random() * 2.5) * 1000;
     el.style.left = `${best.x}px`;
     el.style.top = `${best.y}px`;
     el.style.setProperty("--life", `${lifeMs / 1000}s`);
@@ -578,11 +613,12 @@
     recentVoiceSpots.push({
       x: best.x,
       y: best.y,
-      until: performance.now() + Math.min(lifeMs, 10000),
+      until: performance.now() + Math.min(lifeMs, isNarrow ? 7000 : 10000),
     });
 
     voiceField.appendChild(el);
     el.addEventListener("animationend", () => el.remove(), { once: true });
+    return true;
   };
 
   const spawnWhisper = () => {
@@ -592,7 +628,13 @@
         : whispers;
     const text = pool[whisperIndex % pool.length];
     whisperIndex += 1;
-    spawnVoiceBubble(text, { isVow: pool === userVows });
+    const ok = spawnVoiceBubble(text, { isVow: pool === userVows });
+    // 配置失敗時はすぐに再挑戦（スマホで沈黙しがちなのを防ぐ）
+    if (!ok && !reduceMotion && window.scrollY <= window.innerHeight * 0.85) {
+      setTimeout(() => {
+        spawnVoiceBubble(text, { isVow: pool === userVows });
+      }, 420);
+    }
   };
 
   const showVowOnHero = (vow) => {
@@ -616,8 +658,9 @@
   };
 
   if (voiceField && voiceStage && !reduceMotion) {
-    setTimeout(spawnWhisper, 900);
-    setInterval(spawnWhisper, 5600);
+    const whisperInterval = isTouch || window.innerWidth < 720 ? 3000 : 5600;
+    setTimeout(spawnWhisper, isTouch || window.innerWidth < 720 ? 480 : 900);
+    setInterval(spawnWhisper, whisperInterval);
   }
 
   // フリックで回る埴輪（初期静止 → 強さに応じた速さ → 自然減速）
