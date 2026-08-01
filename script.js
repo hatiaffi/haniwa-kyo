@@ -375,6 +375,8 @@
     if (fieldRect.width < 40 || stageRect.width < 40) return false;
 
     const isNarrow = fieldRect.width < 720 || isTouch;
+    // 同時表示は2個まで
+    if (!force && voiceField.querySelectorAll(".voice-bubble").length >= 2) return false;
 
     // スマホは横書き多め（縦書きは場所を取りすぎて出にくい）
     const useVertical = Math.random() < (isNarrow ? 0.22 : 0.5);
@@ -599,7 +601,7 @@
 
     const drift = 18 + Math.random() * 28;
     const side = best.side;
-    const lifeMs = ((isVow ? 13 : isNarrow ? 10 : 11.5) + Math.random() * 2.5) * 1000;
+    const lifeMs = ((isVow ? 16 : isNarrow ? 15 : 16.5) + Math.random() * 3) * 1000;
     el.style.left = `${best.x}px`;
     el.style.top = `${best.y}px`;
     el.style.setProperty("--life", `${lifeMs / 1000}s`);
@@ -613,7 +615,7 @@
     recentVoiceSpots.push({
       x: best.x,
       y: best.y,
-      until: performance.now() + Math.min(lifeMs, isNarrow ? 7000 : 10000),
+      until: performance.now() + Math.min(lifeMs, isNarrow ? 11000 : 13000),
     });
 
     voiceField.appendChild(el);
@@ -629,11 +631,11 @@
     const text = pool[whisperIndex % pool.length];
     whisperIndex += 1;
     const ok = spawnVoiceBubble(text, { isVow: pool === userVows });
-    // 配置失敗時はすぐに再挑戦（スマホで沈黙しがちなのを防ぐ）
+    // 配置失敗時だけ、少し間を置いて1回だけ再挑戦
     if (!ok && !reduceMotion && window.scrollY <= window.innerHeight * 0.85) {
       setTimeout(() => {
         spawnVoiceBubble(text, { isVow: pool === userVows });
-      }, 420);
+      }, 1800);
     }
   };
 
@@ -658,9 +660,8 @@
   };
 
   if (voiceField && voiceStage && !reduceMotion) {
-    const whisperInterval = isTouch || window.innerWidth < 720 ? 3000 : 5600;
-    setTimeout(spawnWhisper, isTouch || window.innerWidth < 720 ? 480 : 900);
-    setInterval(spawnWhisper, whisperInterval);
+    setTimeout(spawnWhisper, 1800);
+    setInterval(spawnWhisper, 6000);
   }
 
   // フリックで回る埴輪（初期静止 → 強さに応じた速さ → 自然減速）
