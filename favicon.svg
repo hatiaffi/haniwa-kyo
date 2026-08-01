@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="okY">
+  <defs>
+    <linearGradient id="clay" x1="8" y1="4" x2="26" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e0a06e"/>
+      <stop offset="45%" stop-color="#c48a58"/>
+      <stop offset="100%" stop-color="#8f5a32"/>
+    </linearGradient>
+    <radialGradient id="cheek" cx="50%" cy="38%" r="55%">
+      <stop offset="0%" stop-color="#f0c090" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#c48a58" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- soft mound-ish paper circle -->
+  <circle cx="16" cy="16" r="15.2" fill="#f3efe6"/>
+  <!-- haniwa head (closed dome) -->
+  <ellipse cx="16" cy="17.2" rx="11.2" ry="12.4" fill="url(#clay)"/>
+  <ellipse cx="16" cy="17.2" rx="11.2" ry="12.4" fill="url(#cheek)"/>
+  <!-- subtle rim shade -->
+  <ellipse cx="16" cy="17.2" rx="11.2" ry="12.4" fill="none" stroke="#6e4224" stroke-opacity="0.22" stroke-width="0.6"/>
+  <!-- eyes + mouth (classic three holes) -->
+  <ellipse cx="11.6" cy="14.2" rx="2.05" ry="2.85" fill="#221c18"/>
+  <ellipse cx="20.4" cy="14.2" rx="2.05" ry="2.85" fill="#221c18"/>
+  <ellipse cx="16" cy="21.1" rx="2.35" ry="3.15" fill="#221c18"/>
+</svg>
