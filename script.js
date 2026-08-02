@@ -1,7 +1,10 @@
 (() => {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isTouch = matchMedia("(hover: none), (pointer: coarse)").matches;
+  // ?test=1 でシークレット類をすぐ確認できる
+  const testMode = new URLSearchParams(window.location.search).has("test");
   if (isTouch) document.body.classList.add("is-touch");
+  if (testMode) document.body.classList.add("is-test");
 
   // Year
   const yearEl = document.getElementById("year");
@@ -878,11 +881,11 @@
     let faceAccDeg = 0;
     let faceSwapTimer = 0;
     let lastAltFace = "";
-    const FACE_NEED_DEG = 12 * 360;
+    const FACE_NEED_DEG = (testMode ? 0.35 : 12) * 360;
     const FACE_HOLD_MS = 480;
-    // シークレットは変身のうち約8%、スーパーはそのうちさらにレア
-    const SECRET_FACE_CHANCE = 0.08;
-    const SUPER_SECRET_FACE_CHANCE = 0.012;
+    // シークレットは変身のうち約8%、スーパーはそのうちさらにレア（?test=1 でほぼ毎回スーパー）
+    const SECRET_FACE_CHANCE = testMode ? 0.05 : 0.08;
+    const SUPER_SECRET_FACE_CHANCE = testMode ? 0.9 : 0.012;
 
     const spinParamsForRate = (degPerSec) => {
       const r = Math.abs(degPerSec);
@@ -1114,8 +1117,8 @@
   const galleryLead = document.getElementById("gallery-lead");
   const secretResidents = [...document.querySelectorAll("[data-secret-resident]")];
   const superSecretResident = document.querySelector("[data-super-secret-resident]");
-  const SECRET_CHANCE = 0.22; // だいたい5回に1回くらい
-  const SUPER_SECRET_CHANCE = 0.04; // だいたい25回に1回くらい
+  const SECRET_CHANCE = testMode ? 0.15 : 0.22; // だいたい5回に1回くらい
+  const SUPER_SECRET_CHANCE = testMode ? 0.95 : 0.04; // だいたい25回に1回くらい
 
   // いったん全員非表示（CSSの display:grid 対策も含め明示）
   [...secretResidents, superSecretResident].filter(Boolean).forEach((el) => {
@@ -1884,8 +1887,8 @@
 
   const SECRET_KEYS = ["shadow", "sparkle", "night"];
   const SUPER_SECRET_KEY = "mugen";
-  const DIAGNOSE_SECRET_CHANCE = 0.14; // だいたい7回に1回くらい
-  const DIAGNOSE_SUPER_SECRET_CHANCE = 0.03; // さらにレア
+  const DIAGNOSE_SECRET_CHANCE = testMode ? 0.1 : 0.14; // だいたい7回に1回くらい
+  const DIAGNOSE_SUPER_SECRET_CHANCE = testMode ? 0.85 : 0.03; // さらにレア
   const QUIZ_LEN = 4;
 
   // 設問プール15問（ここから毎回ランダムで4問）／答えは前向きユーモア
