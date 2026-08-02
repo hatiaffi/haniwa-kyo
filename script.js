@@ -1396,7 +1396,7 @@
     });
   }
 
-  // Join form + burst + 中学生向け入力ガード
+  // Join form + burst + やさしいことばの入力ガード
   const form = document.getElementById("join-form");
   const note = document.getElementById("form-note");
   const burstCanvas = document.getElementById("burst-canvas");
@@ -1604,7 +1604,7 @@
     rude: "乱暴なことばはつかえないよ。はにわは、やわらかいことばで立つ。",
     bully: "だれかを傷つけることばは、はにわ教ではつかえないよ。",
     harm: "つらいときはひとりでかかえず、身近な大人や相談できる人に話してみてね。",
-    adult: "中学生向けの丘だから、その内容は入力できないよ。",
+    adult: "やさしいことばの丘だから、その内容は入力できないよ。",
     personal: "本名・住所・連絡先・学校の情報は入れないでね。はにわネームでどうぞ。",
     empty: "空欄のままでは立てないよ。",
     short: "もうすこしことばを足してみて。",
@@ -1769,7 +1769,7 @@
       }
 
       setFormNote(
-        `ようこそ、${name}よ。「${vow}」——ちかい、丘のみんなの倉庫にもそっと置いたよ。`,
+        `ようこそ、${name}よ。「${vow}」——ちかい、丘のみんなにもそっと届いたよ。`,
         false
       );
       const btn = form.querySelector('button[type="submit"]');
