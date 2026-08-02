@@ -849,6 +849,40 @@
     let spinAccDeg = 0;
     let lastSpinWhisperAt = 0;
     const SPIN_MAX_LIVE = 6;
+    // 約12回転に1回、住民の顔にちらっと変身
+    const frontImg = haniwa.querySelector(".haniwa-face--front");
+    const superFlash = document.getElementById("hero-super-flash");
+    const heroEl = document.querySelector(".hero");
+    const defaultFrontSrc =
+      frontImg?.getAttribute("src") || "assets/haniwa-front.png";
+    const altFaces = [
+      "assets/resident-a.png",
+      "assets/resident-b.png",
+      "assets/resident-c.png",
+      "assets/resident-d.png",
+      "assets/resident-e.png",
+      "assets/resident-f.png",
+      "assets/resident-g.png",
+      "assets/resident-h.png",
+    ];
+    const secretFaces = [
+      "assets/resident-secret-a.png",
+      "assets/resident-secret-b.png",
+      "assets/resident-secret-c.png",
+    ];
+    const superSecretFace = "assets/resident-secret-super.png";
+    [...altFaces, ...secretFaces, superSecretFace].forEach((src) => {
+      const pre = new Image();
+      pre.src = src;
+    });
+    let faceAccDeg = 0;
+    let faceSwapTimer = 0;
+    let lastAltFace = "";
+    const FACE_NEED_DEG = 12 * 360;
+    const FACE_HOLD_MS = 480;
+    // シークレットは変身のうち約8%、スーパーはそのうちさらにレア
+    const SECRET_FACE_CHANCE = 0.08;
+    const SUPER_SECRET_FACE_CHANCE = 0.012;
 
     const spinParamsForRate = (degPerSec) => {
       const r = Math.abs(degPerSec);
@@ -873,10 +907,61 @@
       }
     };
 
+    const maybeSwapFace = (deltaDeg) => {
+      if (!frontImg || reduceMotion) return;
+      faceAccDeg += Math.abs(deltaDeg);
+      if (faceAccDeg < FACE_NEED_DEG) return;
+      faceAccDeg = 0;
+
+      const roll = Math.random();
+      const useSuper = roll < SUPER_SECRET_FACE_CHANCE;
+      const useSecret = !useSuper && roll < SUPER_SECRET_FACE_CHANCE + SECRET_FACE_CHANCE;
+      let pick;
+      if (useSuper) {
+        pick = superSecretFace;
+      } else {
+        const pool = useSecret ? secretFaces : altFaces;
+        pick = pool[Math.floor(Math.random() * pool.length)];
+        if (pool.length > 1) {
+          let guard = 0;
+          while (pick === lastAltFace && guard < 6) {
+            pick = pool[Math.floor(Math.random() * pool.length)];
+            guard += 1;
+          }
+        }
+      }
+      lastAltFace = pick;
+      frontImg.src = pick;
+      haniwa.classList.add("is-face-swap");
+      haniwa.classList.toggle("is-face-secret", useSecret || useSuper);
+      haniwa.classList.toggle("is-face-super-secret", useSuper);
+      if (useSuper) {
+        // スーパーだけ画面がはっきり光る
+        if (superFlash) {
+          superFlash.classList.remove("is-on");
+          // 再トリガー用にリフロー
+          void superFlash.offsetWidth;
+          superFlash.classList.add("is-on");
+        }
+        heroEl?.classList.add("is-super-flash");
+        window.setTimeout(() => {
+          heroEl?.classList.remove("is-super-flash");
+          superFlash?.classList.remove("is-on");
+        }, 700);
+      }
+      window.clearTimeout(faceSwapTimer);
+      const hold = useSuper ? FACE_HOLD_MS + 360 : useSecret ? FACE_HOLD_MS + 160 : FACE_HOLD_MS;
+      faceSwapTimer = window.setTimeout(() => {
+        frontImg.src = defaultFrontSrc;
+        haniwa.classList.remove("is-face-swap", "is-face-secret", "is-face-super-secret");
+      }, hold);
+    };
+
     const accumulateSpin = (deltaDeg, degPerSec) => {
       const d = Math.abs(deltaDeg);
       if (d < 0.15) return;
       spinAccDeg += d;
+      maybeSwapFace(d);
       const { needDeg, cooldown, burst } = spinParamsForRate(degPerSec);
       if (spinAccDeg >= needDeg) {
         whisperFromSpin({ force: false, burst, cooldown });
@@ -886,6 +971,7 @@
     const render = () => {
       const cos = Math.cos((angle * Math.PI) / 180);
       const width = Math.max(0.12, Math.abs(cos));
+      haniwa.style.setProperty("--face-sx", width.toFixed(4));
       haniwa.style.transform = `scaleX(${width.toFixed(4)})`;
       haniwa.classList.toggle("is-back", cos < 0);
       haniwa.classList.toggle("is-fast", Math.abs(speed) > 480);
@@ -1023,25 +1109,27 @@
     }, 900 + Math.floor(Math.random() * 500));
   }
 
-  // シークレット丘の住人（3人）— たまに1体だけ出現
+  // シークレット丘の住人（3人＋スーパー1人）— たまに1体だけ出現
   const gallerySection = document.querySelector(".gallery");
   const galleryLead = document.getElementById("gallery-lead");
   const secretResidents = [...document.querySelectorAll("[data-secret-resident]")];
+  const superSecretResident = document.querySelector("[data-super-secret-resident]");
   const SECRET_CHANCE = 0.22; // だいたい5回に1回くらい
+  const SUPER_SECRET_CHANCE = 0.04; // だいたい25回に1回くらい
 
   // いったん全員非表示（CSSの display:grid 対策も含め明示）
-  secretResidents.forEach((el) => {
+  [...secretResidents, superSecretResident].filter(Boolean).forEach((el) => {
     el.hidden = true;
     el.classList.remove("is-revealed", "is-visible");
   });
 
-  if (secretResidents.length && Math.random() < SECRET_CHANCE) {
-    const pick =
-      secretResidents[Math.floor(Math.random() * secretResidents.length)];
-    gallerySection?.classList.add("is-secret-open");
+  const revealGalleryGuest = (pick, { superSecret = false } = {}) => {
+    if (!pick) return;
+    gallerySection?.classList.add(superSecret ? "is-super-secret-open" : "is-secret-open");
     if (galleryLead) {
-      galleryLead.textContent =
-        "ぽんこつ八人衆に、きょうはシークレットがひとりまざった。……見た？";
+      galleryLead.textContent = superSecret
+        ? "……むげんはにわが、きょうだけ丘に立ってる。回し続けた人への手紙みたい。"
+        : "ぽんこつ八人衆に、きょうはシークレットがひとりまざった。……見た？";
     }
     pick.hidden = false;
     requestAnimationFrame(() => {
@@ -1049,6 +1137,14 @@
         pick.classList.add("is-revealed", "reveal", "is-visible");
       }, 160);
     });
+  };
+
+  if (superSecretResident && Math.random() < SUPER_SECRET_CHANCE) {
+    revealGalleryGuest(superSecretResident, { superSecret: true });
+  } else if (secretResidents.length && Math.random() < SECRET_CHANCE) {
+    revealGalleryGuest(
+      secretResidents[Math.floor(Math.random() * secretResidents.length)]
+    );
   }
 
   // カードレール：ゆっくり自動ループ ＋ ドラッグ操作
@@ -1775,10 +1871,21 @@
       note: "夜の部の住人票、発行。昼寝は職務に含まれる。堂々とまぶたを閉じてよし。",
       secret: true,
     },
+    mugen: {
+      id: "mugen",
+      name: "むげんはにわ",
+      src: "assets/resident-secret-super.png",
+      tag: "回し続けた人だけが、たまに会える",
+      note: "スーパーシークレット当選。星の目が開いた。……まだ先があるってことだよ。",
+      secret: true,
+      superSecret: true,
+    },
   };
 
   const SECRET_KEYS = ["shadow", "sparkle", "night"];
+  const SUPER_SECRET_KEY = "mugen";
   const DIAGNOSE_SECRET_CHANCE = 0.14; // だいたい7回に1回くらい
+  const DIAGNOSE_SUPER_SECRET_CHANCE = 0.03; // さらにレア
   const QUIZ_LEN = 4;
 
   // 設問プール15問（ここから毎回ランダムで4問）／答えは前向きユーモア
@@ -1973,7 +2080,10 @@
   };
 
   const pickWinner = () => {
-    // たまーにシークレット当選（設問とは別抽選）
+    // ごくまれにスーパーシークレット、たまにシークレット（設問とは別抽選）
+    if (Math.random() < DIAGNOSE_SUPER_SECRET_CHANCE) {
+      return SUPER_SECRET_KEY;
+    }
     if (Math.random() < DIAGNOSE_SECRET_CHANCE) {
       return SECRET_KEYS[Math.floor(Math.random() * SECRET_KEYS.length)];
     }
@@ -2037,19 +2147,33 @@
     const type = TYPES[key];
     if (!type) return;
     const isSecret = Boolean(type.secret);
+    const isSuper = Boolean(type.superSecret);
 
     if (diagnoseResult) {
       diagnoseResult.classList.toggle("is-secret", isSecret);
+      diagnoseResult.classList.toggle("is-super-secret", isSuper);
     }
     if (diagnosePanel) {
       diagnosePanel.classList.toggle("is-secret-result", isSecret);
+      diagnosePanel.classList.toggle("is-super-secret-result", isSuper);
     }
-    if (secretBadge) secretBadge.hidden = !isSecret;
+    if (secretBadge) {
+      secretBadge.hidden = !isSecret;
+      secretBadge.textContent = isSuper ? "SUPER SECRET" : "SECRET";
+    }
     if (resultLabel) {
-      resultLabel.textContent = isSecret ? "シークレット診断結果" : "診断結果";
+      resultLabel.textContent = isSuper
+        ? "スーパーシークレット診断結果"
+        : isSecret
+          ? "シークレット診断結果"
+          : "診断結果";
     }
     if (resultYou) {
-      resultYou.textContent = isSecret ? "なんと、あなたは" : "あなたは";
+      resultYou.textContent = isSuper
+        ? "なんとなんと、あなたは"
+        : isSecret
+          ? "なんと、あなたは"
+          : "あなたは";
     }
     if (resultArt) {
       resultArt.src = type.src;
@@ -2068,9 +2192,16 @@
     diagnoseIndex = 0;
     resetDiagnoseScores();
     activeQuestions = shuffle(diagnoseQuestionPool).slice(0, QUIZ_LEN);
-    if (diagnoseResult) diagnoseResult.classList.remove("is-secret");
-    if (diagnosePanel) diagnosePanel.classList.remove("is-secret-result");
-    if (secretBadge) secretBadge.hidden = true;
+    if (diagnoseResult) {
+      diagnoseResult.classList.remove("is-secret", "is-super-secret");
+    }
+    if (diagnosePanel) {
+      diagnosePanel.classList.remove("is-secret-result", "is-super-secret-result");
+    }
+    if (secretBadge) {
+      secretBadge.hidden = true;
+      secretBadge.textContent = "SECRET";
+    }
     if (resultLabel) resultLabel.textContent = "診断結果";
     if (resultYou) resultYou.textContent = "あなたは";
     if (diagnoseSparkles) diagnoseSparkles.innerHTML = "";

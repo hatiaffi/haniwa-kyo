@@ -269,6 +269,53 @@ a {
   animation: grain-drift 30s linear infinite;
 }
 
+/* むげんはにわ出現時だけ：はっきり分かる金のフラッシュ */
+.hero-super-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(255, 252, 235, 0.95) 0%,
+      rgba(255, 220, 140, 0.72) 22%,
+      rgba(232, 180, 100, 0.28) 48%,
+      transparent 70%
+    ),
+    rgba(255, 244, 210, 0.42);
+  mix-blend-mode: screen;
+}
+
+.hero-super-flash.is-on {
+  animation: hero-super-flash 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero.is-super-flash .hero-copy {
+  filter: brightness(1.08);
+  transition: filter 0.2s ease;
+}
+
+@keyframes hero-super-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  38% {
+    opacity: 0.88;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
 /* フリックで回る埴輪 */
 .spin-stage {
   position: absolute;
@@ -365,6 +412,58 @@ a {
 
 .haniwa-3d.is-fast {
   filter: drop-shadow(0 14px 18px rgba(34, 28, 24, 0.2)) blur(0.3px);
+}
+
+.haniwa-3d.is-face-swap {
+  animation: face-swap-pop 0.48s var(--ease-out);
+}
+
+.haniwa-3d.is-face-swap.is-face-secret {
+  animation: face-swap-secret 0.64s var(--ease-out);
+}
+
+.haniwa-3d.is-face-swap.is-face-super-secret {
+  animation: face-swap-super 0.76s var(--ease-out);
+}
+
+.haniwa-3d.is-face-swap.is-fast {
+  filter: drop-shadow(0 14px 18px rgba(34, 28, 24, 0.2)) blur(0.2px) saturate(1.06);
+}
+
+@keyframes face-swap-pop {
+  0% {
+    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1.08);
+  }
+  35% {
+    filter: drop-shadow(0 20px 28px rgba(196, 138, 88, 0.28)) brightness(1.12);
+  }
+  100% {
+    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1);
+  }
+}
+
+@keyframes face-swap-secret {
+  0% {
+    filter: drop-shadow(0 18px 28px rgba(47, 70, 54, 0.28)) brightness(1.14);
+  }
+  40% {
+    filter: drop-shadow(0 22px 34px rgba(143, 90, 50, 0.34)) brightness(1.2);
+  }
+  100% {
+    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1);
+  }
+}
+
+@keyframes face-swap-super {
+  0% {
+    filter: drop-shadow(0 22px 40px rgba(255, 220, 140, 0.6)) brightness(1.38);
+  }
+  40% {
+    filter: drop-shadow(0 30px 52px rgba(255, 210, 120, 0.68)) brightness(1.48);
+  }
+  100% {
+    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1);
+  }
 }
 
 .hero-copy {
@@ -1081,7 +1180,26 @@ a {
   z-index: 1;
 }
 
-.gallery.is-secret-open .section-lead {
+.gallery-item--super-secret {
+  background:
+    linear-gradient(145deg, rgba(255, 244, 210, 0.78), rgba(196, 138, 88, 0.34)),
+    rgba(243, 239, 230, 0.55);
+  border-color: rgba(143, 90, 50, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 236, 190, 0.45) inset,
+    0 8px 22px rgba(143, 90, 50, 0.12);
+}
+
+.secret-badge--super {
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  color: #4a3220;
+  background: linear-gradient(180deg, rgba(255, 246, 210, 0.95), rgba(232, 196, 130, 0.9));
+  border-color: rgba(143, 90, 50, 0.4);
+}
+
+.gallery.is-secret-open .section-lead,
+.gallery.is-super-secret-open .section-lead {
   color: var(--clay-deep);
 }
 
@@ -1254,6 +1372,17 @@ a {
   filter:
     drop-shadow(0 14px 20px rgba(143, 90, 50, 0.22))
     drop-shadow(0 0 18px rgba(255, 220, 150, 0.45));
+}
+
+.diagnose-result.is-super-secret {
+  border-color: rgba(143, 90, 50, 0.42);
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 20%, rgba(255, 236, 190, 0.55), transparent 62%),
+    rgba(243, 239, 230, 0.72);
+}
+
+.diagnose-result.is-super-secret .diagnose-secret-badge {
+  background: linear-gradient(180deg, rgba(255, 246, 210, 0.95), rgba(232, 196, 130, 0.9));
 }
 
 .diagnose-result.is-secret .diagnose-result-name {
