@@ -525,7 +525,7 @@
     return lines.filter(Boolean).join("\n");
   };
 
-  const spawnVoiceBubble = (text, { isVow = false, force = false } = {}) => {
+  const spawnVoiceBubble = (text, { isVow = false, force = false, fromSpin = false } = {}) => {
     if (!voiceField || !voiceStage) return false;
     if (!force && reduceMotion) return false;
     if (!force && window.scrollY > window.innerHeight * 0.85) return false;
@@ -535,8 +535,9 @@
     if (fieldRect.width < 40 || stageRect.width < 40) return false;
 
     const isNarrow = fieldRect.width < 720 || isTouch;
-    // 同時表示は2個まで
-    if (!force && voiceField.querySelectorAll(".voice-bubble").length >= 2) return false;
+    // 自動は2個、回転ごほうびは6個まで
+    const maxLive = fromSpin ? 6 : 2;
+    if (!force && voiceField.querySelectorAll(".voice-bubble").length >= maxLive) return false;
 
     // スマホは縦書き多め、PCは半々
     const useVertical = Math.random() < (isNarrow ? 0.65 : 0.5);
@@ -783,22 +784,25 @@
     return true;
   };
 
-  const spawnWhisper = () => {
+  const spawnWhisper = ({ fromSpin = false } = {}) => {
     // 基本は定番つぶやき。丘のみんな／自分のちかいがたまに混ざる
+    // 回転ごほうびは定番多め（すぐ反応して楽しく）
     const vowPool = getVowPool();
-    const canShowVow = vowPool.length > 0 && !recentWasVow() && Math.random() < 0.16;
+    const vowChance = fromSpin ? 0.08 : 0.16;
+    const canShowVow = vowPool.length > 0 && !recentWasVow() && Math.random() < vowChance;
     const isVow = canShowVow;
     const pool = isVow ? vowPool : whispers;
     const text = pickRandomWhisper(pool);
-    if (!text) return;
+    if (!text) return false;
     rememberWhisper(text);
-    const ok = spawnVoiceBubble(text, { isVow });
-    // 配置失敗時だけ、少し間を置いて1回だけ再挑戦
-    if (!ok && !reduceMotion && window.scrollY <= window.innerHeight * 0.85) {
+    const ok = spawnVoiceBubble(text, { isVow, fromSpin });
+    // 配置失敗時だけ、少し間を置いて1回だけ再挑戦（回転時は待たない）
+    if (!ok && !fromSpin && !reduceMotion && window.scrollY <= window.innerHeight * 0.85) {
       setTimeout(() => {
-        spawnVoiceBubble(text, { isVow });
+        spawnVoiceBubble(text, { isVow, fromSpin: false });
       }, 1800);
     }
+    return ok;
   };
 
   const showVowOnHero = (vow) => {
@@ -821,8 +825,8 @@
   };
 
   if (voiceField && voiceStage && !reduceMotion) {
-    setTimeout(spawnWhisper, 1800);
-    setInterval(spawnWhisper, 6000);
+    setTimeout(spawnWhisper, 2200);
+    setInterval(spawnWhisper, 10000);
   }
 
   // フリックで回る埴輪（初期静止 → 強さに応じた速さ → 自然減速）
@@ -841,6 +845,43 @@
     const stopSpeed = 3;
     const dragGain = 0.55; // px → deg
     const flickGain = 1.35; // px/ms → deg/sec 換算用
+    // 回せば回すほどことばが増える（速さで頻度アップ、同時は最大6）
+    let spinAccDeg = 0;
+    let lastSpinWhisperAt = 0;
+    const SPIN_MAX_LIVE = 6;
+
+    const spinParamsForRate = (degPerSec) => {
+      const r = Math.abs(degPerSec);
+      if (r >= 750) return { needDeg: 26, cooldown: 150, burst: 2 };
+      if (r >= 420) return { needDeg: 40, cooldown: 220, burst: 1 };
+      if (r >= 180) return { needDeg: 58, cooldown: 340, burst: 1 };
+      return { needDeg: 88, cooldown: 620, burst: 1 };
+    };
+
+    const whisperFromSpin = ({ force = false, burst = 1, cooldown = 0 } = {}) => {
+      if (reduceMotion || !voiceField) return;
+      if (window.scrollY > window.innerHeight * 0.85) return;
+      const now = performance.now();
+      if (!force && now - lastSpinWhisperAt < cooldown) return;
+      lastSpinWhisperAt = now;
+      spinAccDeg = 0;
+      const n = Math.max(1, burst);
+      for (let i = 0; i < n; i += 1) {
+        const live = voiceField.querySelectorAll(".voice-bubble").length;
+        if (live >= SPIN_MAX_LIVE) break;
+        spawnWhisper({ fromSpin: true });
+      }
+    };
+
+    const accumulateSpin = (deltaDeg, degPerSec) => {
+      const d = Math.abs(deltaDeg);
+      if (d < 0.15) return;
+      spinAccDeg += d;
+      const { needDeg, cooldown, burst } = spinParamsForRate(degPerSec);
+      if (spinAccDeg >= needDeg) {
+        whisperFromSpin({ force: false, burst, cooldown });
+      }
+    };
 
     const render = () => {
       const cos = Math.cos((angle * Math.PI) / 180);
@@ -894,8 +935,12 @@
       const t = performance.now();
       if (prev) {
         const dx = x - prev.x;
-        angle = (angle - dx * dragGain) % 360;
+        const delta = -dx * dragGain;
+        const dtMs = Math.max(1, t - prev.t);
+        const degPerSec = (Math.abs(delta) / dtMs) * 1000;
+        angle = (angle + delta) % 360;
         if (angle < 0) angle += 360;
+        accumulateSpin(delta, degPerSec);
       }
       pushSample(x, t);
       render();
@@ -910,6 +955,12 @@
       if (Math.abs(v) < 40) v = 0;
       speed = Math.max(-maxSpeed, Math.min(maxSpeed, v));
       samples.length = 0;
+      // フリックの強さで初撃の量を変える
+      const abs = Math.abs(speed);
+      if (abs >= 120) {
+        const burst = abs >= 700 ? 2 : 1;
+        whisperFromSpin({ force: true, burst, cooldown: 0 });
+      }
     };
 
     stage.addEventListener("pointerup", endDrag);
@@ -921,8 +972,10 @@
       last = now;
 
       if (!dragging && !reduceMotion && Math.abs(speed) > 0) {
-        angle = (angle + speed * dt) % 360;
+        const delta = speed * dt;
+        angle = (angle + delta) % 360;
         if (angle < 0) angle += 360;
+        accumulateSpin(delta, Math.abs(speed));
         // 自然な減速（摩擦力 ≈ 速度に比例 → 指数減衰）
         speed *= Math.exp(-friction * dt);
         if (Math.abs(speed) < stopSpeed) speed = 0;
