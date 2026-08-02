@@ -180,46 +180,233 @@
   const voiceField = document.getElementById("voice-field");
   const voiceStage = document.getElementById("spin-stage");
   const whispers = [
-    "だれかと比べるのをやめたら、ごはんがおいしくなった。",
-    "言い返さずに三秒立ったら、けんかが雲になった。",
-    "ねむい朝も、心のなかで右手だけ上げている。",
-    "完璧より、ちょっと傾いたやさしさ。",
-    "友だちのぼやきに、正解を言わなくてよかった。",
-    "へんな自分も、焼きものの味だと気づいた。",
-    "はにわになってから、夜がやわらかい。",
-    "笑うこと、いちばんむずかしいのにいちばん効く。",
-    "くらべず、ゆるして、すこし笑う。",
-    "土の温度くらいで、いきてみよう。",
+    "くらべず、ゆるして、すこし笑う。これで合格。",
     "あくびは罪じゃない。立派な直立の一種です。",
-    "右手を上げたら、なんとなく一日が始まった。",
-    "正面は苦手でも、斜めからのやさしさは得意。",
-    "よろこびが両手で足りない日は、足も使っていい。",
-    "考えが回りすぎたら、一回すわってお茶でも。",
+    "二度寝は文化財。大切に保護しよう。",
+    "ごはんまでの待ち時間は、たのしみのカウントダウン。",
     "おなかがすいたら哲学が深まる。まず何か食べよう。",
     "もしものコレクションより、いまのおやつを優先。",
-    "急がない勇気は、丘いちばんのわざ。",
     "雨の日は、ぬくぬくが正規ルート。",
+    "ばんざいの練習に、理由はいらない。",
+    "ドヤ顔の中身は、だいたいふつうでちょうどいい。",
+    "傾き5度までは、個性の範囲です。",
+    "ねむけも、丘の住民票があれば正当派。",
     "ほめられたら斜めににじむ。それがてれの証明。",
     "失敗はヒビ。直さなくても、味になる。",
-    "今日の自分に、土へのありがとうをひとつ。",
-    "となりのはにわの腕の長さ、もう測らなくていい。",
-    "くちびるの端を、いちミリだけ上げてみる。",
-    "ねむけも、丘の住民票があれば正当派。",
-    "ばんざいの練習に、理由はいらない。",
-    "ゆるした瞬間、肩の土がふわっと軽くなる。",
-    "ドヤ顔の中身は、だいたいふつうでちょうどいい。",
-    "風まかせで立ってたら、いい景色だった。",
-    "はにわ教の戒律は三つだけ。くらべず、ゆるして、笑う。",
+    "完璧より、ちょっと傾いたやさしさ。",
+    "右手を上げたら、なんとなく一日が始まった。",
     "スマホより先に、空を一秒見る。それだけで天気が変わる。",
-    "友だちの話に、正解じゃなくて耳を開花させる。",
-    "傾いたまま五日目。それでも、ここにいる。",
-    "ごはんまでの待ち時間は、たのしみのカウントダウン。",
-    "二度寝は文化財。大切に保護しよう。",
+    "言い返さずに三秒立ったら、けんかが雲になった。",
+    "だれかと比べるのをやめたら、ごはんがおいしくなった。",
+    "友だちのぼやきに、正解を言わなくてよかった。",
+    "へんな自分も、焼きものの味だと気づいた。",
+    "くちびるの端を、いちミリだけ上げてみる。",
+    "ゆるした瞬間、肩の土がふわっと軽くなる。",
+    "風まかせで立ってたら、いい景色だった。",
+    "となりのはにわの腕の長さ、もう測らなくていい。",
+    "考えが回りすぎたら、一回すわってお茶でも。",
+    "正面は苦手でも、斜めからのやさしさは得意。",
+    "よろこびが両手で足りない日は、足も使っていい。",
+    "はにわになってから、夜がやわらかい。",
+    "笑うこと、いちばんむずかしいのにいちばん効く。",
+    "土の温度くらいで、いきてみよう。",
+    "今日の自分に、土へのありがとうをひとつ。",
+    "急がない勇気は、丘いちばんのわざ。",
+    "はにわ教の戒律は三つだけ。くらべず、ゆるして、笑う。",
+    "友だちの話に、正解じゃなくて耳をひらく。",
+    "ねむい朝も、心のなかで右手だけ上げている。",
+    "テストの前より、おやつの前のほうが真剣。それでいい。",
+    "転んでも土の味見。立ち直せば満点寄り。",
+    "「めんどい」は、休憩の予告放送です。",
+    "笑うと顔がほぐれる。はにわも、たぶんそう。",
+    "宿題より先に、水を一杯。体は小さな古墳。",
+    "友だちのネタに乗れた日は、もう勝ち。",
+    "変顔は親善大使。空気がふわっとなる。",
+    "遅刻しそうな朝も、靴下一歩から直立開始。",
+    "好きな曲のサビで、心だけばんざい。",
+    "消しゴムかすも、がんばった証拠の雪。",
+    "今日のラッキーアイテムは、あたたかいごはん。",
+    "ちょっとした親切は、丘のWi-Fiよりつながる。",
+    "失敗談は、明日の自分へのお土産。",
+    "空を見あげたら、宿題の重さが3グラム減った。",
+    "「まあいいか」は、はにわ教の高級呪文。",
+    "顔が赤いのはてれ。エンジンの暖機運転。",
+    "昼休みの立ち話に、小さな祭りがある。",
+    "消しゴムで消せることは、だいたい大丈夫。",
+    "自分に満点はむずかしい。合格点で前進しよう。",
+    "雨宿りも立派な作戦。濡れない勝ち。",
+    "笑った回数が多い日は、記録に残したい。",
+    "肩の力が抜けたら、腕がばんざいしやすい。",
+    "苦手なことは、斜めからながめてみよう。",
+    "「ありがとう」は、いちばん軽い贈り物。",
+    "寝ぐせは個性。朝のはにわスタイル。",
+    "小さくうなずくだけで、会話がやわらかくなる。",
+    "きょう立てた自分に、ひと言だけ拍手。",
+    "おにぎり一個で、世界はだいたい立て直せる。",
+    "風が強い日は、髪の毛と一緒に笑う。",
+    "まちがえても、ページをめくれる。それが強さ。",
+    "好きな色のペンで書いたら、文字が元気になる。",
+    "丘のルール：くらべない、あせらない、すこし笑う。",
+    "心の天気がくもりでも、直立はできる。",
+    "「だいじょうぶ」は、自分にも言っていい。",
+    "ちょっと休憩。はにわも、ずっとは動かない。",
+    "今日の自分、昨日より0.1ミリやさしい。合格。",
+    "笑顔の練習は、鏡なしでもできる。",
+    "友だちと分けたおかしは、幸福度が倍になる。",
+    "ゆっくり歩く日も、ちゃんと前に進んでいる。",
+    "はにわは急がない。なのに、ちゃんと立っている。",
   ];
+  // 丘のみんなのちかい（API不通時のフォールバック）＋共有倉庫＋この端末
+  const communityVows = [
+    "くらべる前に、まず笑う。",
+    "今日はゆるしの日。自分にも適用。",
+    "宿題より先に、空を一秒。",
+    "傾いても、心は直立。",
+    "おやつの前の真剣顔、認めてほしい。",
+    "友だちのぼやきに、うなずく係。",
+    "ばんざいは無言でも通じる。",
+    "ねむけは罪じゃない。文化です。",
+    "失敗したら、味が増えたと思う。",
+    "雨の日はぬくぬく信仰。",
+    "てれても、いちミリ笑う。",
+    "急がない。はにわでいい。",
+    "ごはんが炊けたら、世界平和。",
+    "苦手なことは斜めから見る。",
+    "消しゴムかすも、がんばりの雪。",
+    "「まあいいか」を今日の呪文に。",
+    "ほめられたら、斜めににじむ。",
+    "二度寝を守る会、会員です。",
+    "正しい答えより、あたたかい耳。",
+    "小さくうなずく勇者になりたい。",
+    "転んだら、土の味見して立ち直る。",
+    "好きな曲のサビで心ばんざい。",
+    "完璧じゃなくて、合格点で進む。",
+    "おにぎり一個のちからを信じてる。",
+    "となりと比べない宣言、更新中。",
+    "あくびも立派な直立です。",
+    "今日の自分に、ひそか拍手。",
+    "風が強くても、すこし笑う。",
+    "まちがえても、ページはめくれる。",
+    "丘の住民として、やさしく立つ。",
+  ];
+  const VOW_STORAGE_KEY = "haniwa-kyo-vows";
   const userVows = [];
-  let whisperIndex = 0;
+  let remoteVows = [];
+
+  const loadStoredVows = () => {
+    try {
+      const raw = localStorage.getItem(VOW_STORAGE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list)
+        ? list.filter((t) => typeof t === "string" && t.trim()).map((t) => t.trim())
+        : [];
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const saveStoredVow = (vow) => {
+    const text = String(vow || "").trim();
+    if (!text) return;
+    const list = loadStoredVows().filter((t) => t !== text);
+    list.unshift(text);
+    try {
+      localStorage.setItem(VOW_STORAGE_KEY, JSON.stringify(list.slice(0, 40)));
+    } catch (_) {
+      /* ignore quota */
+    }
+  };
+
+  const getVowPool = () => {
+    const seen = new Set();
+    const pool = [];
+    const push = (t) => {
+      const text = String(t || "").trim();
+      if (!text || seen.has(text)) return;
+      seen.add(text);
+      pool.push(text);
+    };
+    userVows.forEach(push);
+    remoteVows.forEach(push);
+    loadStoredVows().forEach(push);
+    // 共有倉庫が空／不通のときだけサンプルを足す
+    if (remoteVows.length < 3) communityVows.forEach(push);
+    return pool;
+  };
+
+  const refreshRemoteVows = async () => {
+    try {
+      const res = await fetch("/api/vows?limit=60", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data?.ok || !Array.isArray(data.vows)) return;
+      remoteVows = data.vows
+        .filter((t) => typeof t === "string" && t.trim())
+        .map((t) => t.trim())
+        .slice(0, 80);
+    } catch (_) {
+      /* オフライン時はローカル／サンプルで継続 */
+    }
+  };
+
+  const shareVowRemote = async (vow) => {
+    try {
+      const res = await fetch("/api/vows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vow }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          ok: false,
+          message: data?.message || "ちかい倉庫に届かなかったみたい。",
+        };
+      }
+      if (data?.vow && !remoteVows.includes(data.vow)) {
+        remoteVows.unshift(data.vow);
+        if (remoteVows.length > 80) remoteVows.length = 80;
+      }
+      return { ok: true };
+    } catch (_) {
+      return { ok: false, message: "通信エラーで、みんなの丘にはまだ届いてないよ。" };
+    }
+  };
+
+  refreshRemoteVows();
+  setInterval(refreshRemoteVows, 120000);
+
+  // 直近に出した文言（連続・同じ並びを避ける）
+  const recentWhisperTexts = [];
+  const RECENT_WHISPER_LIMIT = 10;
   // 直近に出した位置（近くへの連打表示を防ぐ）
   const recentVoiceSpots = [];
+
+  const pickRandomWhisper = (pool) => {
+    if (!pool.length) return "";
+    const blocked = new Set(recentWhisperTexts);
+    let choices = pool.filter((t) => !blocked.has(t));
+    if (!choices.length) {
+      // 直近が埋まったら、いちばん古いもの以外から選ぶ
+      const last = recentWhisperTexts[recentWhisperTexts.length - 1];
+      choices = pool.filter((t) => t !== last);
+      if (!choices.length) choices = [...pool];
+    }
+    return choices[Math.floor(Math.random() * choices.length)];
+  };
+
+  const rememberWhisper = (text) => {
+    if (!text) return;
+    recentWhisperTexts.push(text);
+    while (recentWhisperTexts.length > RECENT_WHISPER_LIMIT) {
+      recentWhisperTexts.shift();
+    }
+  };
+
+  const recentWasVow = () => {
+    const vows = new Set(getVowPool());
+    return recentWhisperTexts.slice(-4).some((t) => vows.has(t));
+  };
 
   // 縦書き用：句読点・助詞など、日本語として自然な位置で改行
   const breakVerticalText = (raw) => {
@@ -597,39 +784,40 @@
   };
 
   const spawnWhisper = () => {
-    const pool =
-      userVows.length && Math.random() < 0.35
-        ? userVows
-        : whispers;
-    const text = pool[whisperIndex % pool.length];
-    whisperIndex += 1;
-    const ok = spawnVoiceBubble(text, { isVow: pool === userVows });
+    // 基本は定番つぶやき。丘のみんな／自分のちかいがたまに混ざる
+    const vowPool = getVowPool();
+    const canShowVow = vowPool.length > 0 && !recentWasVow() && Math.random() < 0.16;
+    const isVow = canShowVow;
+    const pool = isVow ? vowPool : whispers;
+    const text = pickRandomWhisper(pool);
+    if (!text) return;
+    rememberWhisper(text);
+    const ok = spawnVoiceBubble(text, { isVow });
     // 配置失敗時だけ、少し間を置いて1回だけ再挑戦
     if (!ok && !reduceMotion && window.scrollY <= window.innerHeight * 0.85) {
       setTimeout(() => {
-        spawnVoiceBubble(text, { isVow: pool === userVows });
+        spawnVoiceBubble(text, { isVow });
       }, 1800);
     }
   };
 
   const showVowOnHero = (vow) => {
-    userVows.unshift(vow);
+    const text = String(vow || "").trim();
+    if (!text) return;
+    userVows.unshift(text);
     if (userVows.length > 12) userVows.length = 12;
+    saveStoredVow(text);
+    rememberWhisper(text);
+    // みんなの丘へ共有（失敗しても入信自体は成功）
+    shareVowRemote(text).then((result) => {
+      if (result.ok) refreshRemoteVows();
+    });
 
-    const reveal = () => {
-      spawnVoiceBubble(vow, { isVow: true, force: true });
-      // 間隔を空けて、既存つぶやきとの被りを避ける
-      setTimeout(() => spawnVoiceBubble(vow, { isVow: true, force: true }), 2800);
-      setTimeout(() => spawnVoiceBubble(vow, { isVow: true, force: true }), 5600);
-    };
+    // 入信後にページ先頭へ戻さない。ヒーローが見えているときだけ一度浮かべる
+    const heroVisible = window.scrollY < window.innerHeight * 0.55;
+    if (!heroVisible) return;
 
-    const hero = document.getElementById("top");
-    if (hero) {
-      hero.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-      setTimeout(reveal, reduceMotion ? 80 : 520);
-    } else {
-      reveal();
-    }
+    spawnVoiceBubble(text, { isVow: true, force: true });
   };
 
   if (voiceField && voiceStage && !reduceMotion) {
@@ -819,7 +1007,8 @@
     let paused = false;
     let resumeTimer = 0;
     let loopWidth = 0;
-    const autoSpeed = 22; // px/sec（ゆっくり）
+    let scrollCarry = 0; // 小数pxを蓄積（scrollLeftの切り捨て対策）
+    const autoSpeed = 28; // px/sec
 
     // シームレスループ用に中身を複製
     const originals = [...rail.children];
@@ -834,16 +1023,31 @@
     });
 
     const measureLoop = () => {
-      loopWidth = rail.scrollWidth / 2;
+      const first = rail.children[0];
+      const mid = rail.children[originals.length];
+      if (first && mid) {
+        // 複製セット先頭までの距離＝1ループ幅（スクロール位置に依存しない）
+        loopWidth = mid.getBoundingClientRect().left - first.getBoundingClientRect().left;
+      } else {
+        loopWidth = rail.scrollWidth / 2;
+      }
+      if (!Number.isFinite(loopWidth) || loopWidth < 8) {
+        loopWidth = rail.scrollWidth / 2;
+      }
     };
     measureLoop();
+    requestAnimationFrame(measureLoop);
     window.addEventListener("resize", measureLoop);
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(measureLoop).observe(rail);
+    }
 
     const wrapScroll = () => {
       if (loopWidth <= 0) return;
-      if (rail.scrollLeft >= loopWidth) {
+      while (rail.scrollLeft >= loopWidth) {
         rail.scrollLeft -= loopWidth;
-      } else if (rail.scrollLeft < 0) {
+      }
+      while (rail.scrollLeft < 0) {
         rail.scrollLeft += loopWidth;
       }
     };
@@ -868,27 +1072,41 @@
       const tick = (now) => {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        if (!paused && !dragging && loopWidth > 0) {
-          rail.scrollLeft += autoSpeed * dt;
-          wrapScroll();
+        if (!paused && !dragging && loopWidth > 1) {
+          // ブラウザは scrollLeft を整数化しがちなので、端数を持ち越す
+          scrollCarry += autoSpeed * dt;
+          const step = scrollCarry >= 1 ? Math.floor(scrollCarry) : 0;
+          if (step > 0) {
+            scrollCarry -= step;
+            rail.scrollLeft += step;
+            wrapScroll();
+          }
         }
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
     }
 
-    rail.addEventListener("pointerenter", () => pauseAuto());
-    rail.addEventListener("pointerleave", () => {
-      if (!dragging) resumeAuto();
+    // マウスホバー中だけ一時停止（タッチの pointerenter 取り残し防止）
+    rail.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === "mouse") pauseAuto();
+    });
+    rail.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "mouse" && !dragging) resumeAuto();
     });
     rail.addEventListener(
       "touchstart",
-      () => pauseAuto(),
+      () => pauseAuto(0),
       { passive: true }
     );
     rail.addEventListener(
       "touchend",
       () => pauseAuto(1600),
+      { passive: true }
+    );
+    rail.addEventListener(
+      "touchcancel",
+      () => pauseAuto(800),
       { passive: true }
     );
 
@@ -1238,6 +1456,8 @@
     personal: "本名・住所・連絡先・学校の情報は入れないでね。はにわネームでどうぞ。",
     empty: "空欄のままでは立てないよ。",
     short: "もうすこしことばを足してみて。",
+    long: "文字数がおおすぎるよ。すこし短くしてみて。",
+    rate: "ちょっと間をあけてから、もういちど立ててね。",
     other: "その内容は入力できないよ。やわらかいことばで書きなおしてみて。",
   };
 
@@ -1289,6 +1509,8 @@
   const findNgCategory = (raw, field) => {
     const t = String(raw || "").trim();
     if (!t) return "empty";
+    if (field === "vow" && [...t].length > 40) return "long";
+    if (field === "name" && [...t].length > 20) return "long";
 
     // 「ち ん こ」「い　じ　め」などもスペース除去後に判定
     const n = normalizeSafe(t);
@@ -1395,7 +1617,7 @@
       }
 
       setFormNote(
-        `ようこそ、${name}よ。「${vow}」——ちかいは、はにわのうしろに浮かぶよ。`,
+        `ようこそ、${name}よ。「${vow}」——ちかい、丘のみんなの倉庫にもそっと置いたよ。`,
         false
       );
       const btn = form.querySelector('button[type="submit"]');
