@@ -1,18 +1,28 @@
 import { MSG, findNgCategory } from "./lib/vow-guard.mjs";
 import { VOW_SEEDS } from "./lib/vows-seed.mjs";
+import { FACE_BASE_TO_ZUKAN_ID } from "./lib/residents.mjs";
+import {
+  UPRIGHT_NEED,
+  canDig,
+  loadExcavation,
+  recordUprightPress,
+  unlockResident,
+} from "./lib/excavation.mjs";
 
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isTouch = matchMedia("(hover: none), (pointer: coarse)").matches;
-  // ?test=1 は localhost のみ。本番は ?test=1&key=mound が必要
+  // ?test=1 / ?secret=1 は localhost のみ。本番は &key=mound が必要
+  // ?secret=1 … 通常シークレット（銀）を出しやすく。むげんは出さない
   const urlParams = new URLSearchParams(window.location.search);
   const hostName = window.location.hostname;
   const isLocalHost = hostName === "localhost" || hostName === "127.0.0.1";
-  const testMode =
-    urlParams.has("test") &&
-    (isLocalHost || urlParams.get("key") === "mound");
+  const testGateOk = isLocalHost || urlParams.get("key") === "mound";
+  const testMode = urlParams.has("test") && testGateOk;
+  const secretTestMode = urlParams.get("secret") === "1" && testGateOk;
   if (isTouch) document.body.classList.add("is-touch");
   if (testMode) document.body.classList.add("is-test");
+  if (secretTestMode) document.body.classList.add("is-secret-test");
 
   // タブ非表示時はアニメ／タイマーを休止
   let pageVisible = document.visibilityState !== "hidden";
@@ -873,11 +883,11 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
     let faceAccDeg = 0;
     let faceSwapTimer = 0;
     let lastAltFace = "";
-    const FACE_NEED_DEG = (testMode ? 0.35 : 12) * 360;
+    const FACE_NEED_DEG = (testMode || secretTestMode ? 0.35 : 12) * 360;
     const FACE_HOLD_MS = 480;
-    // シークレットは変身のうち約8%、スーパーはそのうちさらにレア（?test=1 でほぼ毎回スーパー）
-    const SECRET_FACE_CHANCE = testMode ? 0.05 : 0.08;
-    const SUPER_SECRET_FACE_CHANCE = testMode ? 0.9 : 0.012;
+    // 通常: シークレット約8%／むげん約1.2%。?test=1 はむげん寄り。?secret=1 は通常シークレット寄り（むげんなし）
+    const SECRET_FACE_CHANCE = secretTestMode ? 0.92 : testMode ? 0.05 : 0.08;
+    const SUPER_SECRET_FACE_CHANCE = secretTestMode ? 0 : testMode ? 0.9 : 0.012;
 
     const spinParamsForRate = (degPerSec) => {
       const r = Math.abs(degPerSec);
@@ -931,18 +941,23 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
       haniwa.classList.add("is-face-swap");
       haniwa.classList.toggle("is-face-secret", useSecret || useSuper);
       haniwa.classList.toggle("is-face-super-secret", useSuper);
-      if (useSuper) {
-        // スーパーだけ画面がはっきり光る
+      // スピンで会ったシークレット／むげんを発掘図鑑へ登録
+      const zukanId = FACE_BASE_TO_ZUKAN_ID[pick];
+      if (zukanId) unlockResident(zukanId);
+      if (useSuper || useSecret) {
+        // むげん＝金フラッシュ／通常シークレット＝銀フラッシュ
         if (superFlash) {
-          superFlash.classList.remove("is-on");
+          superFlash.classList.remove("is-on", "is-silver");
+          superFlash.classList.toggle("is-silver", useSecret && !useSuper);
           // 再トリガー用にリフロー
           void superFlash.offsetWidth;
           superFlash.classList.add("is-on");
         }
-        heroEl?.classList.add("is-super-flash");
+        heroEl?.classList.toggle("is-super-flash", useSuper);
+        heroEl?.classList.toggle("is-secret-flash", useSecret && !useSuper);
         window.setTimeout(() => {
-          heroEl?.classList.remove("is-super-flash");
-          superFlash?.classList.remove("is-on");
+          heroEl?.classList.remove("is-super-flash", "is-secret-flash");
+          superFlash?.classList.remove("is-on", "is-silver");
         }, 700);
       }
       window.clearTimeout(faceSwapTimer);
@@ -1132,15 +1147,16 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
     }, 900 + Math.floor(Math.random() * 500));
   }
 
-  // シークレット丘の住人（3人＋スーパー1人）— たまに1体だけ出現
+  // シークレット（丘の住人・八人衆＋たまに1体だけ出現）
+  // ギャラリー表示のみ。発掘図鑑の unlockedIds には登録しない
   const gallerySection = document.querySelector(".gallery");
   const galleryLead = document.getElementById("gallery-lead");
   const secretResidents = [...document.querySelectorAll("[data-secret-resident]")];
   const superSecretResident = document.querySelector("[data-super-secret-resident]");
-  const SECRET_CHANCE = testMode ? 0.15 : 0.22; // だいたい5回に1回くらい
-  const SUPER_SECRET_CHANCE = testMode ? 0.95 : 0.04; // だいたい25回に1回くらい
+  // ?secret=1 は通常シークレット（a/b/c）をほぼ必ず。むげんは出さない
+  const SECRET_CHANCE = secretTestMode ? 0.95 : testMode ? 0.15 : 0.22;
+  const SUPER_SECRET_CHANCE = secretTestMode ? 0 : testMode ? 0.95 : 0.04;
 
-  // いったん全員非表示（CSSの display:grid 対策も含め明示）
   [...secretResidents, superSecretResident].filter(Boolean).forEach((el) => {
     el.hidden = true;
     el.classList.remove("is-revealed", "is-visible");
@@ -1385,11 +1401,12 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
     );
   });
 
-  // Ritual pad — たまに心が直立してない
+  // Ritual pad — たまに心が直立してない／5回で発掘解禁
   const pad = document.getElementById("ritual-pad");
   const ritualCount = document.getElementById("ritual-count");
   const ritualLabel = document.getElementById("ritual-label");
   const ritualMsg = document.getElementById("ritual-msg");
+  const ritualDigMsg = document.getElementById("ritual-dig-msg");
   const uprightLines = [
     "心のなかで、ちょっと直立できた。",
     "だれかと比べる手が、下がっていく。",
@@ -1420,18 +1437,57 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
     "完了！……ただし心は少し斜め。明日また立てばいい。",
   ];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  let taps = 0;
+
+  const syncRitualDigCta = (state = loadExcavation()) => {
+    if (!ritualDigMsg) return;
+    ritualDigMsg.classList.remove("is-ready");
+    if (state.daily.dug) {
+      ritualDigMsg.textContent =
+        "きょうの発掘はおわり。記録は丘の発掘図鑑に残ってる。";
+      return;
+    }
+    if (canDig(state)) {
+      ritualDigMsg.textContent =
+        "直立がそろった。丘の発掘図鑑で、いちどだけ掘れる。";
+      ritualDigMsg.classList.add("is-ready");
+      return;
+    }
+    const left = Math.max(0, UPRIGHT_NEED - state.daily.uprightPresses);
+    ritualDigMsg.textContent =
+      left > 0
+        ? `直立チェックがあと ${left} 回で、きょうの発掘がひとつ。`
+        : "直立チェックが五つそろうと、きょうの発掘がひとつ。";
+  };
+
+  let digState = loadExcavation();
+  let taps = Math.min(UPRIGHT_NEED, digState.daily.uprightPresses);
   let wobblyHits = 0;
+
+  if (ritualCount) ritualCount.textContent = `${taps} / ${UPRIGHT_NEED}`;
+  syncRitualDigCta(digState);
+
+  if (pad && taps >= UPRIGHT_NEED) {
+    pad.classList.add("is-done");
+    pad.disabled = true;
+    pad.setAttribute("aria-disabled", "true");
+    if (ritualLabel) {
+      ritualLabel.textContent = digState.daily.dug
+        ? "きょうは発掘ずみ"
+        : pick(doneUpright);
+    }
+  }
+
   if (pad) {
     pad.addEventListener("click", () => {
-      if (taps >= 5) return;
+      if (taps >= UPRIGHT_NEED) return;
       taps += 1;
+      digState = recordUprightPress();
       // だいたい3回に1回は直立してない
       const isWobbly = Math.random() < 0.34;
       if (isWobbly) wobblyHits += 1;
 
       const line = isWobbly ? pick(wobblyLines) : pick(uprightLines);
-      if (ritualCount) ritualCount.textContent = `${taps} / 5`;
+      if (ritualCount) ritualCount.textContent = `${taps} / ${UPRIGHT_NEED}`;
       if (ritualMsg) {
         ritualMsg.textContent = line;
         ritualMsg.classList.toggle("is-wobbly", isWobbly);
@@ -1451,7 +1507,9 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
         { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
       );
 
-      if (taps >= 5) {
+      syncRitualDigCta(digState);
+
+      if (taps >= UPRIGHT_NEED) {
         // 傾きが多い／最後が傾き／たまにランダムで「直立してない完了」
         const endTilted = wobblyHits >= 2 || isWobbly || Math.random() < 0.28;
         pad.classList.add("is-done");
@@ -1466,6 +1524,7 @@ import { VOW_SEEDS } from "./lib/vows-seed.mjs";
           ritualMsg.textContent = endTilted ? pick(doneWobblyMsg) : pick(doneUprightMsg);
           ritualMsg.classList.toggle("is-wobbly", endTilted);
         }
+        syncRitualDigCta(digState);
       }
     });
   }

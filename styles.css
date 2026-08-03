@@ -266,7 +266,7 @@ a {
   animation: grain-drift 30s linear infinite;
 }
 
-/* むげんはにわ出現時だけ：はっきり分かる金のフラッシュ */
+/* むげん＝金／通常シークレット＝銀：スピン顔替えで分かるフラッシュ */
 .hero-super-flash {
   position: absolute;
   inset: 0;
@@ -285,11 +285,24 @@ a {
   mix-blend-mode: screen;
 }
 
+.hero-super-flash.is-silver {
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(210, 220, 230, 0.74) 22%,
+      rgba(160, 176, 192, 0.3) 48%,
+      transparent 70%
+    ),
+    rgba(220, 228, 236, 0.4);
+}
+
 .hero-super-flash.is-on {
   animation: hero-super-flash 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.hero.is-super-flash .hero-copy {
+.hero.is-super-flash .hero-copy,
+.hero.is-secret-flash .hero-copy {
   filter: brightness(1.08);
   transition: filter 0.2s ease;
 }
@@ -429,12 +442,28 @@ a {
   animation: face-swap-pop 0.48s var(--ease-out);
 }
 
-.haniwa-3d.is-face-swap.is-face-secret {
+.haniwa-3d.is-face-swap.is-face-secret:not(.is-face-super-secret) {
   animation: face-swap-secret 0.64s var(--ease-out);
 }
 
 .haniwa-3d.is-face-swap.is-face-super-secret {
   animation: face-swap-super 0.76s var(--ease-out);
+}
+
+/* 通常シークレット表示中：図体まわりの銀色オーラ */
+.haniwa-3d.is-face-secret:not(.is-face-super-secret) {
+  filter:
+    drop-shadow(0 18px 28px rgba(34, 28, 24, 0.18))
+    drop-shadow(0 0 20px rgba(180, 196, 212, 0.4))
+    drop-shadow(0 0 42px rgba(220, 230, 240, 0.2));
+}
+
+/* むげんはにわ表示中：図体まわりの金色オーラだけ足す（背景プレートは足さない） */
+.haniwa-3d.is-face-super-secret {
+  filter:
+    drop-shadow(0 18px 28px rgba(34, 28, 24, 0.18))
+    drop-shadow(0 0 22px rgba(232, 186, 96, 0.42))
+    drop-shadow(0 0 48px rgba(255, 220, 140, 0.22));
 }
 
 .haniwa-3d.is-face-swap.is-fast {
@@ -455,25 +484,45 @@ a {
 
 @keyframes face-swap-secret {
   0% {
-    filter: drop-shadow(0 18px 28px rgba(47, 70, 54, 0.28)) brightness(1.14);
+    filter:
+      drop-shadow(0 20px 36px rgba(200, 214, 228, 0.55))
+      drop-shadow(0 0 28px rgba(170, 188, 206, 0.42))
+      brightness(1.28);
   }
   40% {
-    filter: drop-shadow(0 22px 34px rgba(143, 90, 50, 0.34)) brightness(1.2);
+    filter:
+      drop-shadow(0 24px 42px rgba(220, 230, 240, 0.62))
+      drop-shadow(0 0 40px rgba(190, 206, 222, 0.36))
+      brightness(1.36);
   }
   100% {
-    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1);
+    filter:
+      drop-shadow(0 18px 28px rgba(34, 28, 24, 0.18))
+      drop-shadow(0 0 20px rgba(180, 196, 212, 0.4))
+      drop-shadow(0 0 42px rgba(220, 230, 240, 0.2))
+      brightness(1);
   }
 }
 
 @keyframes face-swap-super {
   0% {
-    filter: drop-shadow(0 22px 40px rgba(255, 220, 140, 0.6)) brightness(1.38);
+    filter:
+      drop-shadow(0 22px 40px rgba(255, 220, 140, 0.62))
+      drop-shadow(0 0 36px rgba(232, 186, 96, 0.5))
+      brightness(1.4);
   }
   40% {
-    filter: drop-shadow(0 30px 52px rgba(255, 210, 120, 0.68)) brightness(1.48);
+    filter:
+      drop-shadow(0 28px 48px rgba(255, 214, 130, 0.7))
+      drop-shadow(0 0 56px rgba(255, 220, 150, 0.38))
+      brightness(1.5);
   }
   100% {
-    filter: drop-shadow(0 18px 24px rgba(34, 28, 24, 0.22)) brightness(1);
+    filter:
+      drop-shadow(0 18px 28px rgba(34, 28, 24, 0.18))
+      drop-shadow(0 0 22px rgba(232, 186, 96, 0.42))
+      drop-shadow(0 0 48px rgba(255, 220, 140, 0.22))
+      brightness(1);
   }
 }
 
@@ -1250,10 +1299,16 @@ a {
 .gallery-item--secret {
   position: relative;
   background:
-    linear-gradient(145deg, rgba(243, 239, 230, 0.72), rgba(196, 168, 120, 0.28)),
-    rgba(243, 239, 230, 0.5);
-  border-color: rgba(138, 90, 50, 0.35);
-  box-shadow: 0 0 0 1px rgba(255, 236, 190, 0.35) inset;
+    linear-gradient(145deg, rgba(236, 240, 244, 0.78), rgba(168, 184, 200, 0.26)),
+    rgba(236, 240, 244, 0.52);
+  border-color: rgba(120, 140, 160, 0.38);
+  box-shadow: 0 0 0 1px rgba(220, 230, 240, 0.4) inset;
+}
+
+.gallery-item--secret .resident-art {
+  filter:
+    drop-shadow(0 10px 14px rgba(34, 28, 24, 0.12))
+    drop-shadow(0 0 14px rgba(180, 196, 212, 0.32));
 }
 
 .gallery-item--secret.is-revealed {
@@ -1269,20 +1324,26 @@ a {
   font-family: var(--font-display);
   font-size: 0.62rem;
   letter-spacing: 0.14em;
-  color: #6e4220;
-  background: rgba(255, 236, 190, 0.85);
-  border: 1px solid rgba(138, 90, 50, 0.25);
+  color: #3a4654;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(200, 212, 224, 0.88));
+  border: 1px solid rgba(120, 140, 160, 0.35);
   z-index: 1;
 }
 
+/* むげん：カード地は他シークレットと同じ。金オーラは図体の drop-shadow のみ */
 .gallery-item--super-secret {
+  position: relative;
   background:
-    linear-gradient(145deg, rgba(255, 244, 210, 0.78), rgba(196, 138, 88, 0.34)),
-    rgba(243, 239, 230, 0.55);
-  border-color: rgba(143, 90, 50, 0.45);
-  box-shadow:
-    0 0 0 1px rgba(255, 236, 190, 0.45) inset,
-    0 8px 22px rgba(143, 90, 50, 0.12);
+    linear-gradient(145deg, rgba(243, 239, 230, 0.72), rgba(196, 168, 120, 0.28)),
+    rgba(243, 239, 230, 0.5);
+  border-color: rgba(138, 90, 50, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 236, 190, 0.35) inset;
+}
+
+.gallery-item--super-secret .resident-art {
+  filter:
+    drop-shadow(0 10px 14px rgba(34, 28, 24, 0.12))
+    drop-shadow(0 0 16px rgba(232, 186, 96, 0.38));
 }
 
 .secret-badge--super {
@@ -1428,9 +1489,9 @@ a {
   font-family: var(--font-display);
   font-size: 0.72rem;
   letter-spacing: 0.18em;
-  color: #6e4220;
-  background: rgba(255, 236, 190, 0.92);
-  border: 1px solid rgba(138, 90, 50, 0.28);
+  color: #3a4654;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(200, 212, 224, 0.9));
+  border: 1px solid rgba(120, 140, 160, 0.35);
 }
 
 .diagnose-secret-badge[hidden] {
@@ -1454,21 +1515,21 @@ a {
   transform-origin: 50% 90%;
 }
 
-/* シークレット結果：ちょっと豪華でうれしい */
+/* シークレット結果：銀色のちょい豪華演出（むげんの金と差別化） */
 .diagnose-result.is-secret {
   padding: 0.35rem 0.2rem 0.15rem;
   background:
-    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(255, 236, 190, 0.55), transparent 60%),
-    linear-gradient(160deg, rgba(255, 248, 230, 0.55), rgba(196, 168, 120, 0.18));
-  border: 1px solid rgba(143, 90, 50, 0.28);
+    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(230, 238, 246, 0.62), transparent 60%),
+    linear-gradient(160deg, rgba(246, 248, 250, 0.58), rgba(168, 184, 200, 0.18));
+  border: 1px solid rgba(120, 140, 160, 0.32);
   box-shadow:
-    0 0 0 1px rgba(255, 236, 190, 0.45) inset,
-    0 14px 28px rgba(143, 90, 50, 0.12);
+    0 0 0 1px rgba(220, 230, 240, 0.5) inset,
+    0 14px 28px rgba(90, 110, 130, 0.12);
   animation: secret-result-glow 2.8s ease-in-out infinite;
 }
 
 .diagnose-result.is-secret .diagnose-result-label {
-  color: #8f5a32;
+  color: #4a5a6a;
   letter-spacing: 0.22em;
 }
 
@@ -1476,24 +1537,48 @@ a {
   width: min(58vw, 230px);
 }
 
-.diagnose-result.is-secret .diagnose-result-art {
+.diagnose-result.is-secret:not(.is-super-secret) .diagnose-result-art {
+  filter:
+    drop-shadow(0 14px 20px rgba(90, 110, 130, 0.2))
+    drop-shadow(0 0 18px rgba(190, 206, 222, 0.48));
+}
+
+.diagnose-result.is-super-secret .diagnose-result-art {
   filter:
     drop-shadow(0 14px 20px rgba(143, 90, 50, 0.22))
     drop-shadow(0 0 18px rgba(255, 220, 150, 0.45));
 }
 
+/* むげん診断結果：金プレート／金バッジ（通常シークレットの銀と分離） */
 .diagnose-result.is-super-secret {
-  border-color: rgba(143, 90, 50, 0.42);
   background:
-    radial-gradient(ellipse 80% 70% at 50% 20%, rgba(255, 236, 190, 0.55), transparent 62%),
-    rgba(243, 239, 230, 0.72);
+    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(255, 236, 190, 0.55), transparent 60%),
+    linear-gradient(160deg, rgba(255, 248, 230, 0.55), rgba(196, 168, 120, 0.18));
+  border: 1px solid rgba(143, 90, 50, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 236, 190, 0.45) inset,
+    0 14px 28px rgba(143, 90, 50, 0.12);
+  animation: super-secret-result-glow 2.8s ease-in-out infinite;
 }
 
 .diagnose-result.is-super-secret .diagnose-secret-badge {
+  color: #4a3220;
   background: linear-gradient(180deg, rgba(255, 246, 210, 0.95), rgba(232, 196, 130, 0.9));
+  border-color: rgba(143, 90, 50, 0.4);
 }
 
-.diagnose-result.is-secret .diagnose-result-name {
+.diagnose-result.is-super-secret .diagnose-result-label {
+  color: #8f5a32;
+}
+
+.diagnose-result.is-secret:not(.is-super-secret) .diagnose-result-name {
+  background: linear-gradient(120deg, #4a5a6a, #8aa0b4 45%, #3a4654);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.diagnose-result.is-super-secret .diagnose-result-name {
   background: linear-gradient(120deg, #8f5a32, #c48a58 45%, #6e4220);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1523,6 +1608,20 @@ a {
 }
 
 @keyframes secret-result-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(220, 230, 240, 0.45) inset,
+      0 14px 28px rgba(90, 110, 130, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(230, 238, 246, 0.75) inset,
+      0 16px 34px rgba(140, 160, 180, 0.2);
+  }
+}
+
+@keyframes super-secret-result-glow {
   0%,
   100% {
     box-shadow:
@@ -1970,4 +2069,575 @@ body.is-touch .diagnose-choice {
   .spin-hint {
     display: none;
   }
+
+  .dig-excavate.is-running .dig-excavate__mound,
+  .dig-excavate.is-running .dig-excavate__dirt,
+  .dig-excavate.is-running .dig-excavate__flash {
+    animation: none !important;
+  }
+
+  .dig-card .resident-art {
+    animation: none !important;
+  }
+}
+
+/* —— 丘の発掘図鑑 —— */
+.dig-page {
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(138, 174, 184, 0.35), transparent 55%),
+    linear-gradient(180deg, #d8e0da 0%, #dfe6e1 40%, #d4d8ce 100%);
+}
+
+.dig-hero {
+  padding-top: 5.5rem;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(196, 138, 88, 0.16), transparent 50%),
+    linear-gradient(180deg, #dce6e0, transparent);
+}
+
+.dig-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.85rem, 4.5vw, 2.6rem);
+  letter-spacing: 0.04em;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.dig-lead {
+  margin-inline: auto;
+}
+
+.dig-record {
+  margin: 1.75rem auto 1.25rem;
+  max-width: 22rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.dig-record__label {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.dig-record__count {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--moss-deep);
+}
+
+.dig-record__fluff {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--clay-deep);
+}
+
+.dig-status {
+  margin: 0 auto 0.5rem;
+  max-width: 26rem;
+}
+
+.dig-status__msg {
+  margin: 0 0 1rem;
+  font-size: 0.98rem;
+  color: var(--ink-soft);
+  min-height: 2.8em;
+}
+
+.dig-status #dig-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.dig-status__hint {
+  margin: 0.9rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.dig-status__hint a {
+  color: var(--moss-deep);
+}
+
+.dig-zukan {
+  padding-top: 1rem;
+}
+
+.dig-zukan .section-inner {
+  text-align: center;
+}
+
+.dig-zukan .section-lead {
+  margin-inline: auto;
+}
+
+.dig-zukan-body {
+  width: min(100% - 2rem, var(--max));
+  margin: 0.5rem auto 3rem;
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.dig-zukan-section__head {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.dig-zukan-section__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.15rem, 3vw, 1.4rem);
+  letter-spacing: 0.08em;
+  color: var(--moss-deep);
+}
+
+.dig-zukan-section__lead {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.dig-zukan-section--secret .dig-zukan-section__title {
+  color: #4a5a6a;
+}
+
+.dig-zukan-section--extra .dig-zukan-section__title {
+  color: var(--clay-deep);
+}
+
+.dig-zukan-section--secret {
+  padding: 1.1rem 0.85rem 0.35rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(220, 228, 236, 0.45), rgba(220, 228, 236, 0.12));
+  border: 1px solid rgba(120, 140, 160, 0.22);
+}
+
+.dig-zukan-section--extra {
+  padding: 1.1rem 0.85rem 0.35rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(232, 210, 168, 0.28), rgba(232, 210, 168, 0.08));
+  border: 1px solid rgba(143, 90, 50, 0.2);
+}
+
+.dig-zukan-section--secret .dig-zukan-section__head,
+.dig-zukan-section--extra .dig-zukan-section__head {
+  border-bottom-color: rgba(34, 28, 24, 0.1);
+}
+
+.dig-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.dig-grid--extra {
+  grid-template-columns: 1fr;
+  max-width: 12rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 720px) {
+  .dig-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.6rem 1.25rem;
+  }
+
+  .dig-grid--secret {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .dig-grid--extra {
+    grid-template-columns: 1fr;
+    max-width: 11rem;
+  }
+}
+
+.dig-card {
+  position: relative;
+  margin: 0;
+  text-align: center;
+}
+
+.dig-card__no {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--moss-deep);
+}
+
+.dig-card.is-locked .dig-card__no {
+  color: var(--ink-soft);
+}
+
+.dig-card--secret .dig-card__no {
+  color: #4a5a6a;
+}
+
+.dig-card--super .dig-card__no {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--clay-deep);
+}
+
+.dig-card__art {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.dig-card.is-locked .dig-card__art {
+  background:
+    radial-gradient(circle at 50% 62%, rgba(34, 28, 24, 0.12), transparent 62%);
+}
+
+.dig-card__silhouette {
+  display: block;
+  width: 58%;
+  max-width: 7.5rem;
+  height: auto;
+  aspect-ratio: 217 / 320;
+  object-fit: contain;
+  margin: 0 auto;
+  filter: drop-shadow(0 10px 16px rgba(34, 28, 24, 0.28));
+  opacity: 0.92;
+}
+
+.dig-card__q {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 5.5vw, 2rem);
+  font-weight: 700;
+  color: rgba(243, 239, 230, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  line-height: 1;
+}
+
+.dig-card.is-unlocked .dig-card__art > picture {
+  display: grid;
+  place-items: center;
+  width: 88%;
+  height: 100%;
+  background: transparent;
+}
+
+.dig-card.is-unlocked .resident-art {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin-inline: auto;
+  background: transparent;
+  filter: drop-shadow(0 10px 16px rgba(34, 28, 24, 0.2));
+}
+
+.dig-card .secret-badge {
+  top: 0.2rem;
+  right: 0.2rem;
+  font-size: 0.62rem;
+}
+
+.dig-card--secret.is-unlocked .resident-art {
+  filter:
+    drop-shadow(0 0 10px rgba(180, 196, 212, 0.4))
+    drop-shadow(0 10px 16px rgba(34, 28, 24, 0.2));
+}
+
+.dig-card--super.is-unlocked .resident-art {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 214, 120, 0.45))
+    drop-shadow(0 10px 16px rgba(34, 28, 24, 0.2));
+}
+
+.dig-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: var(--moss-deep);
+  font-weight: 500;
+}
+
+.dig-link--under-gallery {
+  display: block;
+  width: min(100% - 2rem, var(--max));
+  margin: 0.25rem auto 2.5rem;
+  text-align: center;
+}
+
+.ritual-dig-cta {
+  margin: 1.25rem auto 0;
+  max-width: 26rem;
+}
+
+.ritual-dig-cta__msg {
+  margin: 0 0 0.65rem;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.ritual-dig-cta__msg.is-ready {
+  color: var(--moss-deep);
+  font-weight: 500;
+}
+
+body.is-dig-modal-open {
+  overflow: hidden;
+}
+
+.dig-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  align-items: safe center;
+  justify-items: center;
+  padding: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dig-modal[hidden] {
+  display: none;
+}
+
+.dig-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 28, 24, 0.55);
+  border: none;
+  cursor: pointer;
+}
+
+.dig-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 22rem);
+  max-height: min(92vh, 40rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: auto;
+  padding: 1.5rem 1.25rem 1.35rem;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(196, 138, 88, 0.2), transparent 50%),
+    var(--paper);
+  box-shadow: 0 24px 48px rgba(34, 28, 24, 0.28);
+  text-align: center;
+}
+
+.dig-modal__close-x {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(34, 28, 24, 0.06);
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dig-modal__close-x:hover,
+.dig-modal__close-x:focus-visible {
+  background: rgba(34, 28, 24, 0.12);
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+
+.dig-result__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: stretch;
+  margin-top: 0.15rem;
+}
+
+.dig-result__actions .btn {
+  width: 100%;
+}
+
+.dig-excavate {
+  position: relative;
+  height: 10rem;
+  margin: 0.5rem 0 0.25rem;
+  overflow: hidden;
+}
+
+.dig-excavate[hidden],
+.dig-result[hidden] {
+  display: none;
+}
+
+.dig-excavate__mound {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  width: 9rem;
+  height: 4.2rem;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 8% 8%;
+  background: linear-gradient(180deg, #b88955, #8f5a32);
+}
+
+.dig-excavate.is-running .dig-excavate__mound {
+  animation: dig-mound-shake 0.35s ease-in-out 3;
+}
+
+.dig-excavate__dirt {
+  position: absolute;
+  bottom: 2.2rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 40%;
+  background: #8f5a32;
+  opacity: 0;
+}
+
+.dig-excavate__dirt--a { left: 32%; }
+.dig-excavate__dirt--b { left: 48%; width: 0.9rem; height: 0.9rem; }
+.dig-excavate__dirt--c { left: 62%; }
+
+.dig-excavate.is-running .dig-excavate__dirt--a {
+  animation: dig-dirt-fly 0.7s var(--ease-out) 0.1s both;
+}
+.dig-excavate.is-running .dig-excavate__dirt--b {
+  animation: dig-dirt-fly 0.75s var(--ease-out) 0.2s both;
+}
+.dig-excavate.is-running .dig-excavate__dirt--c {
+  animation: dig-dirt-fly 0.7s var(--ease-out) 0.28s both;
+}
+
+.dig-excavate__flash {
+  position: absolute;
+  inset: 10% 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 248, 220, 0.9), transparent 68%);
+  opacity: 0;
+}
+
+.dig-excavate.is-running .dig-excavate__flash {
+  animation: dig-flash 0.55s var(--ease-out) 0.55s both;
+}
+
+@keyframes dig-mound-shake {
+  0%,
+  100% { transform: translateX(-50%) rotate(0deg); }
+  30% { transform: translateX(calc(-50% - 4px)) rotate(-2deg); }
+  70% { transform: translateX(calc(-50% + 4px)) rotate(2deg); }
+}
+
+@keyframes dig-dirt-fly {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-4.5rem) translateX(8px) scale(0.3); }
+}
+
+@keyframes dig-flash {
+  0% { opacity: 0; transform: scale(0.6); }
+  40% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+.dig-result__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: var(--clay-deep);
+}
+
+.dig-result.is-secret .dig-result__eyebrow {
+  color: #4a5a6a;
+}
+
+.dig-result__art-wrap {
+  width: min(72%, 12rem);
+  aspect-ratio: 1;
+  margin: 0 auto 0.65rem;
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.dig-result__art-wrap > picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.dig-result__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+  filter: drop-shadow(0 12px 18px rgba(34, 28, 24, 0.22));
+  animation: resident-bob 3.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+.dig-result__no {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--moss-deep);
+}
+
+.dig-result.is-secret .dig-result__no {
+  color: #4a5a6a;
+}
+
+.dig-result__name {
+  margin: 0.2rem 0;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+}
+
+.dig-result__line {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.dig-result__note {
+  margin: 0 0 1.1rem;
+  font-size: 0.86rem;
+  color: var(--moss-deep);
+}
+
+.dig-result.is-duplicate .dig-result__note {
+  color: var(--clay-deep);
 }

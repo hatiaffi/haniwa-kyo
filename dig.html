@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>丘の発掘図鑑 — はにわ教</title>
+    <meta
+      name="description"
+      content="はにわ教の丘で発掘した住人たちの図鑑。まだ見ぬはにわは、黒いシルエットのまま。"
+    />
+    <meta name="theme-color" content="#4f6b55" />
+    <link rel="canonical" href="https://haniwa-kyo.vercel.app/dig.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:site_name" content="はにわ教" />
+    <meta property="og:title" content="丘の発掘図鑑 — はにわ教" />
+    <meta
+      property="og:description"
+      content="心の直立チェックのあと、丘をいちどだけ掘れる。発掘記録は、この端末にそっと残ります。"
+    />
+    <meta property="og:url" content="https://haniwa-kyo.vercel.app/dig.html" />
+    <meta property="og:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="丘の発掘図鑑 — はにわ教" />
+    <meta
+      name="twitter:description"
+      content="心の直立チェックのあと、丘をいちどだけ掘れる。"
+    />
+    <meta name="twitter:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="dig-page">
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+    <a class="skip-link" href="#main-content">本文へスキップ</a>
+
+    <header class="site-header" id="site-header">
+      <nav class="nav" aria-label="メイン">
+        <a class="nav-brand" href="./">はにわ教</a>
+        <div class="nav-links">
+          <a href="./#ritual">儀式</a>
+          <a href="./#gallery">八人衆</a>
+          <a href="dig" aria-current="page">発掘図鑑</a>
+          <a href="./#diagnose">診断</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="section dig-hero" aria-label="丘の発掘図鑑">
+        <div class="section-inner dig-hero-inner">
+          <p class="eyebrow">発掘</p>
+          <h1 class="dig-title">丘の発掘図鑑</h1>
+          <p class="section-lead dig-lead">
+            まだ見ぬはにわは、土のしたで待っている。<br />
+            きょうの直立が五つそろったら、いちどだけ掘れる。
+          </p>
+
+          <div class="dig-record" id="dig-record" aria-live="polite">
+            <p class="dig-record__label">この丘での発掘記録</p>
+            <p class="dig-record__count">
+              <span id="dig-unlocked">0</span> / <span id="dig-total">20</span>
+            </p>
+            <p class="dig-record__fluff">
+              土のかけら <span id="dig-fluff">0</span>
+            </p>
+          </div>
+
+          <div class="dig-status" id="dig-status">
+            <p class="dig-status__msg" id="dig-status-msg"></p>
+            <button type="button" class="btn btn-primary magnetic" id="dig-btn" disabled>
+              丘を掘る
+            </button>
+            <p class="dig-status__hint">
+              <a href="./#ritual">心の直立チェック</a>へ戻る
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section dig-zukan" aria-label="発掘した住人">
+        <div class="section-inner">
+          <p class="eyebrow">図鑑</p>
+          <h2>土から出てきた顔たち</h2>
+          <p class="section-lead">
+            シルエットは、まだ会っていない印。<br />
+            番号だけは、先に台帳へ載せておく。
+          </p>
+        </div>
+        <div class="dig-zukan-body" id="dig-zukan-body"></div>
+      </section>
+    </main>
+
+    <div
+      class="dig-modal"
+      id="dig-modal"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dig-result-name"
+    >
+      <div class="dig-modal__backdrop" data-dig-close tabindex="-1" aria-hidden="true"></div>
+      <div class="dig-modal__panel" role="document">
+        <button
+          type="button"
+          class="dig-modal__close-x"
+          data-dig-close
+          aria-label="とじる"
+        >
+          ×
+        </button>
+        <div class="dig-excavate" id="dig-excavate" aria-hidden="true">
+          <div class="dig-excavate__mound"></div>
+          <div class="dig-excavate__dirt dig-excavate__dirt--a"></div>
+          <div class="dig-excavate__dirt dig-excavate__dirt--b"></div>
+          <div class="dig-excavate__dirt dig-excavate__dirt--c"></div>
+          <div class="dig-excavate__flash"></div>
+        </div>
+        <div class="dig-result" id="dig-result" hidden>
+          <p class="dig-result__eyebrow" id="dig-result-eyebrow">発掘成功</p>
+          <div class="dig-result__art-wrap">
+            <picture>
+              <source id="dig-result-webp" type="image/webp" srcset="" />
+              <img
+                id="dig-result-img"
+                class="dig-result__art"
+                src=""
+                alt=""
+                width="512"
+                height="512"
+              />
+            </picture>
+          </div>
+          <p class="dig-result__no" id="dig-result-no"></p>
+          <h2 class="dig-result__name" id="dig-result-name" tabindex="-1"></h2>
+          <p class="dig-result__line" id="dig-result-line"></p>
+          <p class="dig-result__note" id="dig-result-note"></p>
+          <div class="dig-result__actions">
+            <button type="button" class="btn btn-primary" data-dig-close data-dig-close-focus>
+              図鑑を見る
+            </button>
+            <button type="button" class="btn btn-ghost" data-dig-close>とじる</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <p class="footer-brand">はにわ教</p>
+        <p class="footer-copy">
+          発掘記録はこの端末にだけ残ります。<br />
+          これはユーモラスな架空の教団サイトです。
+        </p>
+        <p class="footer-meta">© <span id="year"></span> はにわ教（非公式・非実在）</p>
+      </div>
+    </footer>
+
+    <script type="module" src="dig.js"></script>
+  </body>
+</html>

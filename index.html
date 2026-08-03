@@ -52,10 +52,9 @@
       <nav class="nav" aria-label="メイン">
         <a class="nav-brand" href="#top">はにわ教</a>
         <div class="nav-links">
-          <a href="#teachings">教え</a>
-          <a href="#rites">日課</a>
           <a href="#ritual">儀式</a>
           <a href="#gallery">図鑑</a>
+          <a href="dig">発掘</a>
           <a href="#diagnose">診断</a>
           <a href="#join">入信</a>
         </div>
@@ -129,9 +128,6 @@
           <p class="lede">
             くらべず、ゆるして、すこし笑う。<br />
             ——それが、はにわ教のすべてです。
-          </p>
-          <p class="hero-disclaimer">
-            ※これはユーモラスな架空の教団サイトです。実在の宗教とは関係ありません。
           </p>
           <div class="cta-group">
             <a class="btn btn-primary magnetic" href="#join">はにわになる</a>
@@ -240,9 +236,6 @@
         <div class="section-inner stats-inner">
           <p class="eyebrow reveal">記録</p>
           <h2 class="reveal" data-split>世界が立つあいだ</h2>
-          <p class="stats-note reveal">
-            ※数字はジョーク用の架空カウントです。本気の統計ではありません。
-          </p>
           <div class="stat-row">
             <div class="stat reveal">
               <p class="stat__value"><span id="believer-count">12840</span></p>
@@ -278,6 +271,12 @@
             <span class="ritual-pad__count" id="ritual-count">0 / 5</span>
           </button>
           <p class="ritual-msg" id="ritual-msg" role="status" aria-live="polite"></p>
+          <div class="ritual-dig-cta reveal" id="ritual-dig-cta">
+            <p class="ritual-dig-cta__msg" id="ritual-dig-msg">
+              直立チェックが五つそろうと、きょうの発掘がひとつ。
+            </p>
+            <a class="dig-link" href="dig">丘の発掘図鑑へ</a>
+          </div>
         </div>
       </section>
 
@@ -287,7 +286,8 @@
           <p class="eyebrow reveal">図鑑</p>
           <h2 class="reveal" data-split>丘の住人たち</h2>
           <p class="section-lead reveal" id="gallery-lead">
-            ぽんこつ八人衆。みんなちがって、みんな土。
+            ぽんこつ八人衆。<br />
+            みんなちがって、みんな土。
           </p>
         </div>
         <div class="gallery-rail" id="gallery-rail">
@@ -581,6 +581,9 @@
             </figcaption>
           </figure>
         </div>
+        <a class="dig-link dig-link--under-gallery reveal" href="dig">
+          ほかの住人は、丘の発掘図鑑で
+        </a>
       </section>
 
       <!-- DIAGNOSE -->
