@@ -16,7 +16,7 @@
     <meta property="og:title" content="丘の発掘図鑑 — はにわ教" />
     <meta
       property="og:description"
-      content="心の直立チェックのあと、丘をいちどだけ掘れる。発掘記録は、この端末にそっと残ります。"
+      content="心の直立チェックのあと、丘を掘れる。発掘はすこしストックできる。記録はこの端末にそっと残ります。"
     />
     <meta property="og:url" content="https://haniwa-kyo.vercel.app/dig.html" />
     <meta property="og:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="丘の発掘図鑑 — はにわ教" />
     <meta
       name="twitter:description"
-      content="心の直立チェックのあと、丘をいちどだけ掘れる。"
+      content="心の直立チェックのあと、丘を掘れる。発掘はすこしストックできる。"
     />
     <meta name="twitter:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -57,29 +57,73 @@
 
     <main id="main-content">
       <section class="section dig-hero" aria-label="丘の発掘図鑑">
+        <div class="dig-mounds" id="dig-mounds" aria-hidden="true"></div>
         <div class="section-inner dig-hero-inner">
           <p class="eyebrow">発掘</p>
           <h1 class="dig-title">丘の発掘図鑑</h1>
           <p class="section-lead dig-lead">
             まだ見ぬはにわは、土のしたで待っている。<br />
-            きょうの直立が五つそろったら、いちどだけ掘れる。
+            きょうの直立が五つそろったら、発掘がひとつ。
           </p>
 
           <div class="dig-record" id="dig-record" aria-live="polite">
-            <p class="dig-record__label">この丘での発掘記録</p>
-            <p class="dig-record__count">
-              <span id="dig-unlocked">0</span> / <span id="dig-total">20</span>
-            </p>
-            <p class="dig-record__fluff">
-              土のかけら <span id="dig-fluff">0</span>
-            </p>
+            <p class="dig-record__label">記録</p>
+            <dl class="dig-record__stats">
+              <div class="dig-record__stat">
+                <dt>解放</dt>
+                <dd>
+                  <span id="dig-unlocked">0</span>/<span id="dig-total">20</span>
+                </dd>
+              </div>
+              <div class="dig-record__stat">
+                <dt>かけら</dt>
+                <dd id="dig-fluff">0</dd>
+              </div>
+              <div class="dig-record__stat">
+                <dt>掘れる回数</dt>
+                <dd>
+                  <span id="dig-stock">0</span><span class="dig-record__stock-cap">/<span id="dig-stock-cap">3</span></span>
+                </dd>
+              </div>
+            </dl>
           </div>
 
           <div class="dig-status" id="dig-status">
             <p class="dig-status__msg" id="dig-status-msg"></p>
-            <button type="button" class="btn btn-primary magnetic" id="dig-btn" disabled>
+            <button type="button" class="btn btn-primary btn-wide magnetic" id="dig-btn" disabled>
               丘を掘る
             </button>
+            <div class="dig-fluff-actions__row" id="dig-fluff-actions">
+              <button type="button" class="btn btn-ghost dig-fluff-btn" id="dig-buy-stock" disabled>
+                かけら5で +1回
+              </button>
+              <button type="button" class="btn btn-ghost dig-fluff-btn" id="dig-soft-pity" disabled>
+                かけら10で さがし掘り
+              </button>
+            </div>
+            <div class="dig-fluff-accordion">
+              <button
+                type="button"
+                class="dig-fluff-accordion__trigger"
+                id="dig-fluff-accordion-btn"
+                aria-expanded="false"
+                aria-controls="dig-fluff-accordion-panel"
+              >
+                <span class="dig-fluff-accordion__title">土のかけらのつかいかた</span>
+                <span class="dig-fluff-accordion__chev" aria-hidden="true"></span>
+              </button>
+              <div
+                class="dig-fluff-accordion__panel"
+                id="dig-fluff-accordion-panel"
+                role="region"
+                aria-labelledby="dig-fluff-accordion-btn"
+                hidden
+              >
+                <p class="dig-fluff-actions__hint" id="dig-fluff-hint">
+                  かけら5 → 掘れる回数 +1（上限あり）。かけら10＋回数1 → さがし掘り（未所持がすこし出やすい。保証ではない）。重複発掘でかけらが増える。
+                </p>
+              </div>
+            </div>
             <p class="dig-status__hint">
               <a href="./#ritual">心の直立チェック</a>へ戻る
             </p>
@@ -90,10 +134,10 @@
       <section class="section dig-zukan" aria-label="発掘した住人">
         <div class="section-inner">
           <p class="eyebrow">図鑑</p>
-          <h2>土から出てきた顔たち</h2>
+          <h2>土のなかの顔名簿</h2>
           <p class="section-lead">
-            シルエットは、まだ会っていない印。<br />
-            番号だけは、先に台帳へ載せておく。
+            くろい影は「まだのご対面」。<br />
+            掘るまで、影のままごあいさつ待機中。
           </p>
         </div>
         <div class="dig-zukan-body" id="dig-zukan-body"></div>

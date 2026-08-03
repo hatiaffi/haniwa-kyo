@@ -83,7 +83,7 @@
             title="ドラッグ／矢印キーで回す（ことばが浮かぶ）"
           >
             <div class="spin-shadow" id="spin-shadow" aria-hidden="true"></div>
-            <div class="haniwa-3d" id="haniwa-spin" aria-hidden="true">
+            <div class="haniwa-3d" id="haniwa-spin" data-view="front" aria-hidden="true">
               <picture class="haniwa-face haniwa-face--front">
                 <source
                   type="image/webp"
@@ -101,6 +101,22 @@
                   decoding="async"
                 />
               </picture>
+              <picture class="haniwa-face haniwa-face--right">
+                <source
+                  type="image/webp"
+                  srcset="assets/haniwa-right-512.webp 512w, assets/haniwa-right.webp 1024w"
+                  sizes="(max-width: 720px) 78vw, min(42vw, 480px)"
+                />
+                <img
+                  class="haniwa-photo"
+                  src="assets/haniwa-right.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                  draggable="false"
+                  decoding="async"
+                />
+              </picture>
               <picture class="haniwa-face haniwa-face--back">
                 <source
                   type="image/webp"
@@ -110,6 +126,22 @@
                 <img
                   class="haniwa-photo"
                   src="assets/haniwa-back.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                  draggable="false"
+                  decoding="async"
+                />
+              </picture>
+              <picture class="haniwa-face haniwa-face--left">
+                <source
+                  type="image/webp"
+                  srcset="assets/haniwa-left-512.webp 512w, assets/haniwa-left.webp 1024w"
+                  sizes="(max-width: 720px) 78vw, min(42vw, 480px)"
+                />
+                <img
+                  class="haniwa-photo"
+                  src="assets/haniwa-left.png"
                   alt=""
                   width="1024"
                   height="1024"
@@ -272,9 +304,7 @@
           </button>
           <p class="ritual-msg" id="ritual-msg" role="status" aria-live="polite"></p>
           <div class="ritual-dig-cta reveal" id="ritual-dig-cta">
-            <p class="ritual-dig-cta__msg" id="ritual-dig-msg">
-              直立チェックが五つそろうと、きょうの発掘がひとつ。
-            </p>
+            <p class="ritual-dig-cta__msg" id="ritual-dig-msg"></p>
             <a class="dig-link" href="dig">丘の発掘図鑑へ</a>
           </div>
         </div>
@@ -354,7 +384,7 @@
             </picture>
             <figcaption>
               <strong>てれはにわ</strong>
-              <p class="resident-desc">正面は苦手。斜めが得意</p>
+              <p class="resident-desc">正面は休職中。斜めからこんにちは</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 3">
@@ -420,7 +450,7 @@
             </picture>
             <figcaption>
               <strong>はらぺこはにわ</strong>
-              <p class="resident-desc">ごはんまで、心がふらふら直立</p>
+              <p class="resident-desc">ごはん前は、直立もすこし傾く</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 6">
@@ -464,7 +494,7 @@
             </picture>
             <figcaption>
               <strong>のんびりはにわ</strong>
-              <p class="resident-desc">急がない。それが最高のわざ</p>
+              <p class="resident-desc">急がない。それがはにわの奥義</p>
             </figcaption>
           </figure>
 

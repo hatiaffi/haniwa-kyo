@@ -422,7 +422,9 @@ a {
   background: transparent;
 }
 
-.haniwa-face--back {
+.haniwa-face--back,
+.haniwa-face--right,
+.haniwa-face--left {
   visibility: hidden;
 }
 
@@ -431,6 +433,18 @@ a {
 }
 
 .haniwa-3d.is-back .haniwa-face--back {
+  visibility: visible;
+}
+
+/* 4面ターンテーブル: yaw セクタで画像切替（scaleX 潰しは使わない） */
+.haniwa-3d.is-turntable .haniwa-face {
+  visibility: hidden;
+}
+
+.haniwa-3d.is-turntable[data-view="front"] .haniwa-face--front,
+.haniwa-3d.is-turntable[data-view="right"] .haniwa-face--right,
+.haniwa-3d.is-turntable[data-view="back"] .haniwa-face--back,
+.haniwa-3d.is-turntable[data-view="left"] .haniwa-face--left {
   visibility: visible;
 }
 
@@ -2089,11 +2103,18 @@ body.is-touch .diagnose-choice {
 }
 
 .dig-hero {
+  position: relative;
   padding-top: 5.5rem;
   text-align: center;
+  overflow: hidden;
   background:
     radial-gradient(circle at 50% 30%, rgba(196, 138, 88, 0.16), transparent 50%),
     linear-gradient(180deg, #dce6e0, transparent);
+}
+
+.dig-hero-inner {
+  position: relative;
+  z-index: 1;
 }
 
 .dig-title {
@@ -2108,33 +2129,117 @@ body.is-touch .diagnose-choice {
   margin-inline: auto;
 }
 
+.dig-mounds {
+  position: absolute;
+  inset: auto 0 0;
+  height: 7.5rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dig-mound {
+  position: absolute;
+  bottom: calc(0.35rem + var(--my, 0px));
+  left: var(--mx, 50%);
+  width: calc(2.6rem * var(--ms, 1));
+  height: calc(1.15rem * var(--ms, 1));
+  border-radius: 50% 50% 42% 42%;
+  background:
+    radial-gradient(ellipse 70% 60% at 45% 40%, rgba(196, 138, 88, 0.55), transparent 70%),
+    radial-gradient(ellipse 80% 70% at 50% 70%, #8f5a32, #6b4224 70%);
+  opacity: 0.42;
+  transform: translateX(-50%);
+  box-shadow: 0 1px 0 rgba(47, 70, 54, 0.08);
+}
+
+.dig-mound--2 {
+  opacity: 0.36;
+  filter: saturate(0.92);
+}
+
+.dig-mound--3 {
+  opacity: 0.48;
+  width: calc(2.1rem * var(--ms, 1));
+  height: calc(0.95rem * var(--ms, 1));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dig-mound {
+    animation: dig-mound-breathe 5.5s ease-in-out infinite;
+  }
+
+  .dig-mound--2 {
+    animation-duration: 6.4s;
+    animation-delay: -1.2s;
+  }
+
+  .dig-mound--3 {
+    animation-duration: 7s;
+    animation-delay: -2.4s;
+  }
+}
+
+@keyframes dig-mound-breathe {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.04);
+  }
+}
+
 .dig-record {
-  margin: 1.75rem auto 1.25rem;
-  max-width: 22rem;
-  padding: 1rem 1.25rem;
+  margin: 1.5rem auto 1rem;
+  max-width: 26rem;
+  padding: 0.7rem 0.85rem 0.8rem;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
 .dig-record__label {
-  margin: 0;
-  font-size: 0.85rem;
-  letter-spacing: 0.12em;
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
   color: var(--ink-soft);
 }
 
-.dig-record__count {
-  margin: 0.35rem 0 0;
-  font-family: var(--font-display);
-  font-size: 1.85rem;
-  font-weight: 700;
-  color: var(--moss-deep);
+.dig-record__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr;
+  gap: 0.35rem 0.5rem;
+  margin: 0;
 }
 
-.dig-record__fluff {
-  margin: 0.2rem 0 0;
-  font-size: 0.9rem;
+.dig-record__stat {
+  min-width: 0;
+  text-align: center;
+}
+
+.dig-record__stat dt {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.dig-record__stat dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--moss-deep);
+  line-height: 1.2;
+}
+
+.dig-record__stat:nth-child(2) dd {
   color: var(--clay-deep);
+}
+
+.dig-record__stock-cap {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
 }
 
 .dig-status {
@@ -2143,10 +2248,18 @@ body.is-touch .diagnose-choice {
 }
 
 .dig-status__msg {
-  margin: 0 0 1rem;
-  font-size: 0.98rem;
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
   color: var(--ink-soft);
-  min-height: 2.8em;
+  min-height: 0;
+}
+
+.dig-status__msg:empty {
+  display: none;
+}
+
+.dig-status #dig-btn {
+  width: 100%;
 }
 
 .dig-status #dig-btn:disabled {
@@ -2154,8 +2267,96 @@ body.is-touch .diagnose-choice {
   cursor: default;
 }
 
+.dig-fluff-actions__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.dig-fluff-btn {
+  width: 100%;
+  font-size: 0.84rem;
+  padding: 0.55rem 0.45rem;
+  letter-spacing: 0.04em;
+}
+
+.dig-fluff-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 340px) {
+  .dig-fluff-actions__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dig-fluff-accordion {
+  margin: 0.85rem auto 0;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(143, 90, 50, 0.28);
+  text-align: left;
+}
+
+.dig-fluff-accordion__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.4rem 0.1rem;
+  border: 0;
+  background: transparent;
+  color: var(--clay-deep);
+  font: inherit;
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dig-fluff-accordion__trigger:hover,
+.dig-fluff-accordion__trigger:focus-visible {
+  color: var(--moss-deep);
+}
+
+.dig-fluff-accordion__title {
+  flex: 1;
+}
+
+.dig-fluff-accordion__chev {
+  flex-shrink: 0;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-0.1rem);
+  transition: transform 0.28s var(--ease-out);
+}
+
+.dig-fluff-accordion__trigger[aria-expanded="true"] .dig-fluff-accordion__chev {
+  transform: rotate(225deg) translateY(-0.1rem);
+}
+
+.dig-fluff-accordion__panel {
+  padding: 0.2rem 0 0.15rem;
+}
+
+.dig-fluff-accordion__panel[hidden] {
+  display: none;
+}
+
+.dig-fluff-actions__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
 .dig-status__hint {
-  margin: 0.9rem 0 0;
+  margin: 0.85rem 0 0;
   font-size: 0.88rem;
   color: var(--ink-soft);
 }
@@ -2399,6 +2600,10 @@ body.is-touch .diagnose-choice {
   margin: 0 0 0.65rem;
   font-size: 0.92rem;
   color: var(--ink-soft);
+}
+
+.ritual-dig-cta__msg:empty {
+  display: none;
 }
 
 .ritual-dig-cta__msg.is-ready {

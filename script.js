@@ -1,6 +1,11 @@
 import { MSG, findNgCategory } from "./lib/vow-guard.mjs";
 import { VOW_SEEDS } from "./lib/vows-seed.mjs";
-import { FACE_BASE_TO_ZUKAN_ID } from "./lib/residents.mjs";
+import {
+  DIG_SECRETS,
+  FACE_BASE_TO_ZUKAN_ID,
+  MAIN8,
+  MUGEN,
+} from "./lib/residents.mjs";
 import {
   UPRIGHT_NEED,
   canDig,
@@ -20,6 +25,12 @@ import {
   const testGateOk = isLocalHost || urlParams.get("key") === "mound";
   const testMode = urlParams.has("test") && testGateOk;
   const secretTestMode = urlParams.get("secret") === "1" && testGateOk;
+  // ヒーロー4面ターンテーブル（正面/右/背/左の画像切替）。ダメなら false か ?spin3d=0
+  // ?spin3d=1 で強制ON / ?spin3d=0 で旧CSS scaleX+表裏にフォールバック
+  const HERO_TURNTABLE = true;
+  const spin3dParam = urlParams.get("spin3d");
+  const useHeroTurntable =
+    spin3dParam === "0" ? false : spin3dParam === "1" ? true : HERO_TURNTABLE;
   if (isTouch) document.body.classList.add("is-touch");
   if (testMode) document.body.classList.add("is-test");
   if (secretTestMode) document.body.classList.add("is-secret-test");
@@ -839,6 +850,26 @@ import {
     const superFlash = document.getElementById("hero-super-flash");
     const heroEl = document.querySelector(".hero");
     const defaultFrontBase = "assets/haniwa-front";
+    // yaw 0–360 → 90° セクタ（正回転で front→right→back→left。逆回転は逆順）
+    // front: 315–45 / right: 45–135 / back: 135–225 / left: 225–315
+    const turntableViewFromAngle = (deg) => {
+      let a = deg % 360;
+      if (a < 0) a += 360;
+      if (a >= 315 || a < 45) return "front";
+      if (a < 135) return "right";
+      if (a < 225) return "back";
+      return "left";
+    };
+    const turntableBases = [
+      "assets/haniwa-front",
+      "assets/haniwa-right",
+      "assets/haniwa-back",
+      "assets/haniwa-left",
+    ];
+    if (useHeroTurntable) {
+      haniwa.classList.add("is-turntable");
+      haniwa.dataset.view = "front";
+    }
     const altFaces = [
       "assets/resident-a",
       "assets/resident-b",
@@ -859,7 +890,10 @@ import {
     const preloadFaces = () => {
       if (facesPreloaded) return;
       facesPreloaded = true;
-      [...altFaces, ...secretFaces, superSecretFace].forEach((base) => {
+      const bases = useHeroTurntable
+        ? [...altFaces, ...secretFaces, superSecretFace, ...turntableBases]
+        : [...altFaces, ...secretFaces, superSecretFace];
+      bases.forEach((base) => {
         const pre = new Image();
         pre.src = `${base}.webp`;
       });
@@ -883,11 +917,51 @@ import {
     let faceAccDeg = 0;
     let faceSwapTimer = 0;
     let lastAltFace = "";
+    let faceHoldActive = false;
+    let faceHoldAccDeg = 0;
+    let faceHoldStartedAt = 0;
     const FACE_NEED_DEG = (testMode || secretTestMode ? 0.35 : 12) * 360;
-    const FACE_HOLD_MS = 480;
+    // 別顔はスワップ時点から約1回転（累積|Δdeg|）見せる。レア度は変えない
+    const FACE_HOLD_DEG = 360;
+    const FACE_HOLD_MAX_MS = 3600; // 途中でスピンが死んでも張り付き防止
+    const FACE_HOLD_MIN_MS = 280; // ほぼ停止時に戻すまでの最短表示
     // 通常: シークレット約8%／むげん約1.2%。?test=1 はむげん寄り。?secret=1 は通常シークレット寄り（むげんなし）
     const SECRET_FACE_CHANCE = secretTestMode ? 0.92 : testMode ? 0.05 : 0.08;
     const SUPER_SECRET_FACE_CHANCE = secretTestMode ? 0 : testMode ? 0.9 : 0.012;
+
+    const syncTurntableView = () => {
+      if (!useHeroTurntable) return;
+      // 顔スワップ中は正面に固定（別顔は front 絵に載る）
+      const view = faceHoldActive ? "front" : turntableViewFromAngle(angle);
+      if (haniwa.dataset.view !== view) haniwa.dataset.view = view;
+    };
+
+    const clearFaceSwap = () => {
+      window.clearTimeout(faceSwapTimer);
+      faceSwapTimer = 0;
+      faceHoldActive = false;
+      faceHoldAccDeg = 0;
+      setFrontFace(defaultFrontBase);
+      haniwa.classList.remove("is-face-swap", "is-face-secret", "is-face-super-secret");
+      syncTurntableView();
+    };
+
+    const tickFaceHold = (deltaDegAbs = 0) => {
+      if (!faceHoldActive) return;
+      if (deltaDegAbs > 0) faceHoldAccDeg += deltaDegAbs;
+      if (faceHoldAccDeg >= FACE_HOLD_DEG) {
+        clearFaceSwap();
+        return;
+      }
+      // スピンがほぼ止まったら最短表示後に戻す（タイムアウト待ちにしない）
+      if (
+        !dragging &&
+        Math.abs(speed) < stopSpeed &&
+        performance.now() - faceHoldStartedAt >= FACE_HOLD_MIN_MS
+      ) {
+        clearFaceSwap();
+      }
+    };
 
     const spinParamsForRate = (degPerSec) => {
       const r = Math.abs(degPerSec);
@@ -912,9 +986,10 @@ import {
       }
     };
 
-    const maybeSwapFace = (deltaDeg) => {
+    const maybeSwapFace = (deltaDegAbs) => {
       if (!frontImg || reduceMotion) return;
-      faceAccDeg += Math.abs(deltaDeg);
+      tickFaceHold(deltaDegAbs);
+      faceAccDeg += deltaDegAbs;
       if (faceAccDeg < FACE_NEED_DEG) return;
       faceAccDeg = 0;
 
@@ -960,12 +1035,13 @@ import {
           superFlash?.classList.remove("is-on", "is-silver");
         }, 700);
       }
+      // 表示時間は固定msではなく、スワップ後の累積回転で測る（全レア共通で約1回転）
+      faceHoldActive = true;
+      faceHoldAccDeg = 0;
+      faceHoldStartedAt = performance.now();
       window.clearTimeout(faceSwapTimer);
-      const hold = useSuper ? FACE_HOLD_MS + 360 : useSecret ? FACE_HOLD_MS + 160 : FACE_HOLD_MS;
-      faceSwapTimer = window.setTimeout(() => {
-        setFrontFace(defaultFrontBase);
-        haniwa.classList.remove("is-face-swap", "is-face-secret", "is-face-super-secret");
-      }, hold);
+      faceSwapTimer = window.setTimeout(clearFaceSwap, FACE_HOLD_MAX_MS);
+      syncTurntableView();
     };
 
     const accumulateSpin = (deltaDeg, degPerSec) => {
@@ -980,12 +1056,28 @@ import {
     };
 
     const render = () => {
+      haniwa.classList.toggle("is-fast", Math.abs(speed) > 480);
+
+      if (useHeroTurntable) {
+        syncTurntableView();
+        haniwa.classList.remove("is-back");
+        haniwa.style.removeProperty("--face-sx");
+        haniwa.style.transform = "";
+        if (shadow) {
+          const side = haniwa.dataset.view === "right" || haniwa.dataset.view === "left";
+          const width = side ? 0.78 : 1;
+          shadow.style.transform = `translateX(-50%) scaleX(${(0.4 + width * 0.55).toFixed(3)})`;
+          shadow.style.opacity = (0.16 + width * 0.1).toFixed(3);
+        }
+        return;
+      }
+
+      // 旧挙動: scaleX 潰し + 表裏2面
       const cos = Math.cos((angle * Math.PI) / 180);
       const width = Math.max(0.12, Math.abs(cos));
       haniwa.style.setProperty("--face-sx", width.toFixed(4));
       haniwa.style.transform = `scaleX(${width.toFixed(4)})`;
       haniwa.classList.toggle("is-back", cos < 0);
-      haniwa.classList.toggle("is-fast", Math.abs(speed) > 480);
       if (shadow) {
         shadow.style.transform = `translateX(-50%) scaleX(${(0.35 + width * 0.65).toFixed(3)})`;
         shadow.style.opacity = (0.14 + width * 0.14).toFixed(3);
@@ -1102,6 +1194,9 @@ import {
         speed *= Math.exp(-friction * dt);
         if (Math.abs(speed) < stopSpeed) speed = 0;
         render();
+      } else if (faceHoldActive) {
+        // 回転量が乗らないフレームでも停止判定を進める
+        tickFaceHold(0);
       }
 
       requestAnimationFrame(tick);
@@ -1441,22 +1536,21 @@ import {
   const syncRitualDigCta = (state = loadExcavation()) => {
     if (!ritualDigMsg) return;
     ritualDigMsg.classList.remove("is-ready");
-    if (state.daily.dug) {
-      ritualDigMsg.textContent =
-        "きょうの発掘はおわり。記録は丘の発掘図鑑に残ってる。";
-      return;
-    }
     if (canDig(state)) {
+      const n = state.digStock;
       ritualDigMsg.textContent =
-        "直立がそろった。丘の発掘図鑑で、いちどだけ掘れる。";
+        n >= 2
+          ? `掘れる回数が ${n}。丘の発掘図鑑で、土をほぐせる。`
+          : "直立がそろった。丘の発掘図鑑で、掘れる。";
       ritualDigMsg.classList.add("is-ready");
       return;
     }
-    const left = Math.max(0, UPRIGHT_NEED - state.daily.uprightPresses);
-    ritualDigMsg.textContent =
-      left > 0
-        ? `直立チェックがあと ${left} 回で、きょうの発掘がひとつ。`
-        : "直立チェックが五つそろうと、きょうの発掘がひとつ。";
+    if (state.daily.granted) {
+      ritualDigMsg.textContent =
+        "きょうのもらった発掘はつかった。ストックやかけらがあれば、まだ掘れるかも。";
+      return;
+    }
+    ritualDigMsg.textContent = "";
   };
 
   let digState = loadExcavation();
@@ -1471,9 +1565,10 @@ import {
     pad.disabled = true;
     pad.setAttribute("aria-disabled", "true");
     if (ritualLabel) {
-      ritualLabel.textContent = digState.daily.dug
-        ? "きょうは発掘ずみ"
-        : pick(doneUpright);
+      ritualLabel.textContent =
+        digState.daily.granted && digState.digStock === 0
+          ? "きょうは発掘ずみ"
+          : pick(doneUpright);
     }
   }
 
@@ -1679,106 +1774,35 @@ import {
     });
   }
 
-  // はにわ診断（通常8体＋たまにシークレット）
-  const TYPES = {
-    sleepy: {
-      id: "sleepy",
-      name: "ねむけはにわ",
-      src: "assets/resident-a.png",
-      tag: "あくびも立派な直立",
-      note: "まぶたが半分でも、心は立ってる。あくび回数、本日も優秀賞。",
-      secret: false,
-    },
-    banzai: {
-      id: "banzai",
-      name: "ばんざいはにわ",
-      src: "assets/resident-b.png",
-      tag: "よろこびは両手で足りない",
-      note: "うれしい理由がなくても、腕は上がる。空気を明るくする係、任命。",
-      secret: false,
-    },
-    shy: {
-      id: "shy",
-      name: "てれはにわ",
-      src: "assets/resident-c.png",
-      tag: "正面は苦手。斜めが得意",
-      note: "正面突破より斜めからのやさしさ。耳だけは、いつも開けてる。",
-      secret: false,
-    },
-    doya: {
-      id: "doya",
-      name: "ドヤはにわ",
-      src: "assets/resident-d.png",
-      tag: "右手を上げると、なんとなく強い",
-      note: "中身はふつう。でも右手を上げた瞬間、なぜか物語がはじまる。",
-      secret: false,
-    },
-    dizzy: {
-      id: "dizzy",
-      name: "くらくらはにわ",
-      src: "assets/resident-e.png",
-      tag: "考えが回りすぎて、自分が回る",
-      note: "アイデア運動会の主催者。回るほど、おもしろい景色が見えるタイプ。",
-      secret: false,
-    },
-    hungry: {
-      id: "hungry",
-      name: "はらぺこはにわ",
-      src: "assets/resident-f.png",
-      tag: "ごはんまで、心がふらふら直立",
-      note: "ごはん愛が強いのは才能。満ちたおなかは、やさしい世界への近道。",
-      secret: false,
-    },
-    worry: {
-      id: "worry",
-      name: "びくびくはにわ",
-      src: "assets/resident-g.png",
-      tag: "「もしも」のコレクション係",
-      note: "もしもを集めるのは、大事な人を想う力。先まわり上手のやさしいはにわ。",
-      secret: false,
-    },
-    chill: {
-      id: "chill",
-      name: "のんびりはにわ",
-      src: "assets/resident-h.png",
-      tag: "急がない。それが最高のわざ",
-      note: "風まかせ、腕もまかせ。急がない勇気は、立派な直立の一種。",
-      secret: false,
-    },
-    shadow: {
-      id: "shadow",
-      name: "かげぼしはにわ",
-      src: "assets/resident-secret-a.png",
-      tag: "いるのに、いない。夕方だけ出勤",
-      note: "レア出勤、おめでとう。影みたいにそっと支えてるタイプ、発掘された。",
-      secret: true,
-    },
-    sparkle: {
-      id: "sparkle",
-      name: "きらきらはにわ",
-      src: "assets/resident-secret-b.png",
-      tag: "たまに光る。理由は非公開",
-      note: "きょうの丘に、きらめき当選。理由は非公開だけど、かなりついてる。",
-      secret: true,
-    },
-    night: {
-      id: "night",
-      name: "よるだけはにわ",
-      src: "assets/resident-secret-c.png",
-      tag: "夜勤の丘の番人。昼寝は権利",
-      note: "夜の部の住人票、発行。昼寝は職務に含まれる。堂々とまぶたを閉じてよし。",
-      secret: true,
-    },
-    mugen: {
-      id: "mugen",
-      name: "むげんはにわ",
-      src: "assets/resident-secret-super.png",
-      tag: "回し続けた人だけが、たまに会える",
-      note: "スーパーシークレット当選。星の目が開いた。……まだ先があるってことだよ。",
-      secret: true,
-      superSecret: true,
-    },
+  // はにわ診断（通常8体＋たまにシークレット）／tag は residents.mjs と共有
+  const DIAGNOSE_NOTES = {
+    sleepy: "まぶたが半分でも、心は立ってる。あくび回数、本日も優秀賞。",
+    banzai: "うれしい理由がなくても、腕は上がる。空気を明るくする係、任命。",
+    shy: "正面突破より斜めからのやさしさ。耳だけは、いつも開けてる。",
+    doya: "中身はふつう。でも右手を上げた瞬間、なぜか物語がはじまる。",
+    dizzy: "アイデア運動会の主催者。回るほど、おもしろい景色が見えるタイプ。",
+    hungry: "ごはん愛が強いのは才能。満ちたおなかは、やさしい世界への近道。",
+    worry: "もしもを集めるのは、大事な人を想う力。先まわり上手のやさしいはにわ。",
+    chill: "風まかせ、腕もまかせ。急がない勇気は、立派な直立の一種。",
+    shadow: "レア出勤、おめでとう。影みたいにそっと支えてるタイプ、発掘された。",
+    sparkle: "きょうの丘に、きらめき当選。理由は非公開だけど、かなりついてる。",
+    night: "夜の部の住人票、発行。昼寝は職務に含まれる。堂々とまぶたを閉じてよし。",
+    mugen: "スーパーシークレット当選。星の目が開いた。……まだ先があるってことだよ。",
   };
+  const TYPES = Object.fromEntries(
+    [...MAIN8, ...DIG_SECRETS, MUGEN].map((r) => [
+      r.id,
+      {
+        id: r.id,
+        name: r.name,
+        src: `${r.assetBase}.png`,
+        tag: r.oneLiner,
+        note: DIAGNOSE_NOTES[r.id] || r.oneLiner,
+        secret: Boolean(r.superSecret) || DIG_SECRETS.some((s) => s.id === r.id),
+        superSecret: Boolean(r.superSecret),
+      },
+    ])
+  );
 
   const SECRET_KEYS = ["shadow", "sparkle", "night"];
   const SUPER_SECRET_KEY = "mugen";
