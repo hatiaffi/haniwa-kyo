@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/dig", "destination": "/dig.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
