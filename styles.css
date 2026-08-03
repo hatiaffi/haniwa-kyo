@@ -436,16 +436,28 @@ a {
   visibility: visible;
 }
 
-/* 4面ターンテーブル: yaw セクタで画像切替（scaleX 潰しは使わない） */
+/* 4面ターンテーブル: セクタ切替＋境界クロスフェード＋セクタ内マイクロ rotateY
+   perspective() は各面の transform に含める（親の filter/drop-shadow で 3D が潰れないように） */
 .haniwa-3d.is-turntable .haniwa-face {
-  visibility: hidden;
+  visibility: visible;
+  opacity: 0;
+  transform: perspective(1100px) rotateY(var(--face-yaw, 0deg));
+  transform-origin: 50% 55%;
+  backface-visibility: hidden;
+  will-change: opacity, transform;
 }
 
+/* JS 前／フォールバック: data-view の一面だけ表示 */
 .haniwa-3d.is-turntable[data-view="front"] .haniwa-face--front,
 .haniwa-3d.is-turntable[data-view="right"] .haniwa-face--right,
 .haniwa-3d.is-turntable[data-view="back"] .haniwa-face--back,
 .haniwa-3d.is-turntable[data-view="left"] .haniwa-face--left {
-  visibility: visible;
+  opacity: 1;
+}
+
+/* 点灯中の面を前面に（クロスフェードで2枚重なるとき） */
+.haniwa-3d.is-turntable .haniwa-face.is-lit {
+  z-index: 1;
 }
 
 .haniwa-3d.is-fast {

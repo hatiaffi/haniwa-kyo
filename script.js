@@ -25,9 +25,9 @@ import {
   const testGateOk = isLocalHost || urlParams.get("key") === "mound";
   const testMode = urlParams.has("test") && testGateOk;
   const secretTestMode = urlParams.get("secret") === "1" && testGateOk;
-  // ヒーロー4面ターンテーブル（正面/右/背/左の画像切替）。ダメなら false か ?spin3d=0
-  // ?spin3d=1 で強制ON / ?spin3d=0 で旧CSS scaleX+表裏にフォールバック
-  const HERO_TURNTABLE = true;
+  // ヒーロー回転は正面/背中の2面（CSS scaleX + is-back）がデフォルト。
+  // 4面ターンテーブルは実験用: ?spin3d=1 でON
+  const HERO_TURNTABLE = false;
   const spin3dParam = urlParams.get("spin3d");
   const useHeroTurntable =
     spin3dParam === "0" ? false : spin3dParam === "1" ? true : HERO_TURNTABLE;
@@ -835,8 +835,9 @@ import {
     let last = performance.now();
     const samples = [];
     const maxSpeed = 1400;
-    const friction = 1.65; // 指数減衰（大きいほど早く止まる）
-    const stopSpeed = 3;
+    // 指数減衰（大きいほど早く止まる）。やや弱めて慣性をなめらかに
+    const friction = 1.28;
+    const stopSpeed = 2.2;
     const dragGain = 0.55; // px → deg
     const flickGain = 1.35; // px/ms → deg/sec 換算用
     // 回せば回すほどことばが増える（速さで頻度アップ、同時は最大6）
@@ -850,15 +851,51 @@ import {
     const superFlash = document.getElementById("hero-super-flash");
     const heroEl = document.querySelector(".hero");
     const defaultFrontBase = "assets/haniwa-front";
-    // yaw 0–360 → 90° セクタ（正回転で front→right→back→left。逆回転は逆順）
+    // yaw 0–360 → 90° セクタ
+    // ドラッグ左（angle+）: front→right→back→left
+    // ドラッグ右（angle−）: front→left→back→right
     // front: 315–45 / right: 45–135 / back: 135–225 / left: 225–315
-    const turntableViewFromAngle = (deg) => {
+    const VIEW_ORDER = ["front", "right", "back", "left"];
+    const VIEW_CENTER = { front: 0, right: 90, back: 180, left: 270 };
+    // 境界クロスフェード半幅（計 ~10°）。高速時も ~12° まで
+    const BLEND_HALF = 5;
+    const BLEND_HALF_FAST = 6;
+    // セクタ内マイクロ rotateY。画像と喧嘩しないよう控えめに
+    const MICRO_MAX = 12;
+    const MICRO_MAX_FAST = 8;
+    const BOUNDARIES = [45, 135, 225, 315];
+    const normalizeDeg = (deg) => {
       let a = deg % 360;
       if (a < 0) a += 360;
+      return a;
+    };
+    const signedDeltaDeg = (from, to) => {
+      let d = to - from;
+      while (d > 180) d -= 360;
+      while (d < -180) d += 360;
+      return d;
+    };
+    const turntableViewFromAngle = (deg) => {
+      const a = normalizeDeg(deg);
       if (a >= 315 || a < 45) return "front";
       if (a < 135) return "right";
       if (a < 225) return "back";
       return "left";
+    };
+    // angle+（右面へ）で rotateY を負に → 手前右縁が手前に来る＝右側面が見える向き
+    const microForView = (view, a, microMax) => {
+      const offset = signedDeltaDeg(VIEW_CENTER[view], a);
+      const clamped = Math.max(-45, Math.min(45, offset));
+      return -(clamped / 45) * microMax;
+    };
+    const smoothstep01 = (t) => {
+      const x = Math.max(0, Math.min(1, t));
+      return x * x * (3 - 2 * x);
+    };
+    // 二重に smoothstep して中間の二重露光を短く（ほぼスナップ寄り）
+    const blendT = (t) => {
+      const s = smoothstep01(t);
+      return smoothstep01(s);
     };
     const turntableBases = [
       "assets/haniwa-front",
@@ -866,6 +903,12 @@ import {
       "assets/haniwa-back",
       "assets/haniwa-left",
     ];
+    const faceEls = {
+      front: haniwa.querySelector(".haniwa-face--front"),
+      right: haniwa.querySelector(".haniwa-face--right"),
+      back: haniwa.querySelector(".haniwa-face--back"),
+      left: haniwa.querySelector(".haniwa-face--left"),
+    };
     if (useHeroTurntable) {
       haniwa.classList.add("is-turntable");
       haniwa.dataset.view = "front";
@@ -887,16 +930,24 @@ import {
     ];
     const superSecretFace = "assets/resident-secret-super";
     let facesPreloaded = false;
+    const preloadImage = (src) => {
+      const pre = new Image();
+      pre.decoding = "async";
+      pre.src = src;
+    };
+    const preloadBases = (bases) => {
+      bases.forEach((base) => {
+        preloadImage(`${base}.webp`);
+        preloadImage(`${base}-512.webp`);
+      });
+    };
+    // 4面は初回スワップのヒッチを避けるため即プリロード
+    if (useHeroTurntable) preloadBases(turntableBases);
     const preloadFaces = () => {
       if (facesPreloaded) return;
       facesPreloaded = true;
-      const bases = useHeroTurntable
-        ? [...altFaces, ...secretFaces, superSecretFace, ...turntableBases]
-        : [...altFaces, ...secretFaces, superSecretFace];
-      bases.forEach((base) => {
-        const pre = new Image();
-        pre.src = `${base}.webp`;
-      });
+      preloadBases([...altFaces, ...secretFaces, superSecretFace]);
+      if (useHeroTurntable) preloadBases(turntableBases);
     };
     const scheduleFacePreload = () => {
       const run = () => preloadFaces();
@@ -931,9 +982,61 @@ import {
 
     const syncTurntableView = () => {
       if (!useHeroTurntable) return;
-      // 顔スワップ中は正面に固定（別顔は front 絵に載る）
-      const view = faceHoldActive ? "front" : turntableViewFromAngle(angle);
+      // 顔スワップ中は正面に固定（別顔は front 絵に載る）／マイクロ回転も止める
+      const opacities = { front: 0, right: 0, back: 0, left: 0 };
+      const micros = { front: 0, right: 0, back: 0, left: 0 };
+      let view = "front";
+
+      if (faceHoldActive) {
+        opacities.front = 1;
+      } else {
+        const a = normalizeDeg(angle);
+        const fast = Math.abs(speed) > 620;
+        const blendHalf = fast ? BLEND_HALF_FAST : BLEND_HALF;
+        const microMax = fast ? MICRO_MAX_FAST : MICRO_MAX;
+        view = turntableViewFromAngle(a);
+
+        let blendBoundary = null;
+        let blendDist = 0;
+        for (let i = 0; i < BOUNDARIES.length; i += 1) {
+          const d = signedDeltaDeg(BOUNDARIES[i], a);
+          if (Math.abs(d) < blendHalf) {
+            blendBoundary = BOUNDARIES[i];
+            blendDist = d;
+            break;
+          }
+        }
+
+        if (blendBoundary === null) {
+          opacities[view] = 1;
+          micros[view] = microForView(view, a, microMax);
+        } else {
+          const before = turntableViewFromAngle(blendBoundary - 0.001);
+          const after = turntableViewFromAngle(blendBoundary + 0.001);
+          const t = blendT((blendDist + blendHalf) / (2 * blendHalf));
+          opacities[before] = 1 - t;
+          opacities[after] = t;
+          micros[before] = microForView(before, a, microMax);
+          micros[after] = microForView(after, a, microMax);
+          // data-view は優勢面（クロスフェード中も安定したラベル）
+          view = t >= 0.5 ? after : before;
+        }
+      }
+
       if (haniwa.dataset.view !== view) haniwa.dataset.view = view;
+
+      for (let i = 0; i < VIEW_ORDER.length; i += 1) {
+        const key = VIEW_ORDER[i];
+        const el = faceEls[key];
+        if (!el) continue;
+        const op = opacities[key];
+        el.style.opacity = op > 0.001 ? op.toFixed(3) : "0";
+        el.style.setProperty("--face-yaw", `${micros[key].toFixed(2)}deg`);
+        const lit = op > 0.02;
+        el.classList.toggle("is-lit", lit);
+        // 優勢面を手前に（クロスフェードの重なり順）
+        el.style.zIndex = lit ? (op >= 0.5 ? "2" : "1") : "";
+      }
     };
 
     const clearFaceSwap = () => {
@@ -1064,8 +1167,9 @@ import {
         haniwa.style.removeProperty("--face-sx");
         haniwa.style.transform = "";
         if (shadow) {
-          const side = haniwa.dataset.view === "right" || haniwa.dataset.view === "left";
-          const width = side ? 0.78 : 1;
+          // 角度に連動して影幅をなめらかに（正面/背面=広・側面=狭）
+          const sideFactor = Math.abs(Math.sin((normalizeDeg(angle) * Math.PI) / 180));
+          const width = 1 - sideFactor * 0.22;
           shadow.style.transform = `translateX(-50%) scaleX(${(0.4 + width * 0.55).toFixed(3)})`;
           shadow.style.opacity = (0.16 + width * 0.1).toFixed(3);
         }
@@ -1097,7 +1201,7 @@ import {
       const b = samples[samples.length - 1];
       const dt = Math.max(1, b.t - a.t); // ms
       const vx = ((b.x - a.x) / dt) * 1000; // px/sec
-      // 横フリック → 縦軸回転。右フリックで手前が左へ回る感覚
+      // 横フリック → 縦軸回転（ドラッグと同じ符号: 右フリックで angle−＝左面へ）
       return (-vx * flickGain) / 2.2;
     };
 
