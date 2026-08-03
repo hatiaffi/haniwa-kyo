@@ -1,10 +1,24 @@
-(() => {
+import { MSG, findNgCategory } from "./lib/vow-guard.mjs";
+import { VOW_SEEDS } from "./lib/vows-seed.mjs";
+
+
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isTouch = matchMedia("(hover: none), (pointer: coarse)").matches;
-  // ?test=1 でシークレット類をすぐ確認できる
-  const testMode = new URLSearchParams(window.location.search).has("test");
+  // ?test=1 は localhost のみ。本番は ?test=1&key=mound が必要
+  const urlParams = new URLSearchParams(window.location.search);
+  const hostName = window.location.hostname;
+  const isLocalHost = hostName === "localhost" || hostName === "127.0.0.1";
+  const testMode =
+    urlParams.has("test") &&
+    (isLocalHost || urlParams.get("key") === "mound");
   if (isTouch) document.body.classList.add("is-touch");
   if (testMode) document.body.classList.add("is-test");
+
+  // タブ非表示時はアニメ／タイマーを休止
+  let pageVisible = document.visibilityState !== "hidden";
+  document.addEventListener("visibilitychange", () => {
+    pageVisible = document.visibilityState !== "hidden";
+  });
 
   // Year
   const yearEl = document.getElementById("year");
@@ -162,18 +176,20 @@
     }
 
     const tickDust = () => {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y < -10) p.y = window.innerHeight + 10;
-        if (p.x < -10) p.x = window.innerWidth + 10;
-        if (p.x > window.innerWidth + 10) p.x = -10;
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(143, 90, 50, ${p.a})`;
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      if (pageVisible) {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < -10) p.y = window.innerHeight + 10;
+          if (p.x < -10) p.x = window.innerWidth + 10;
+          if (p.x > window.innerWidth + 10) p.x = -10;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(143, 90, 50, ${p.a})`;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
       requestAnimationFrame(tickDust);
     };
     requestAnimationFrame(tickDust);
@@ -259,39 +275,8 @@
     "ゆっくり歩く日も、ちゃんと前に進んでいる。",
     "はにわは急がない。なのに、ちゃんと立っている。",
   ];
-  // 丘のみんなのちかい（API不通時のフォールバック）＋共有倉庫＋この端末
-  const communityVows = [
-    "くらべる前に、まず笑う。",
-    "今日はゆるしの日。自分にも適用。",
-    "宿題より先に、空を一秒。",
-    "傾いても、心は直立。",
-    "おやつの前の真剣顔、認めてほしい。",
-    "友だちのぼやきに、うなずく係。",
-    "ばんざいは無言でも通じる。",
-    "ねむけは罪じゃない。文化です。",
-    "失敗したら、味が増えたと思う。",
-    "雨の日はぬくぬく信仰。",
-    "てれても、いちミリ笑う。",
-    "急がない。はにわでいい。",
-    "ごはんが炊けたら、世界平和。",
-    "苦手なことは斜めから見る。",
-    "消しゴムかすも、がんばりの雪。",
-    "「まあいいか」を今日の呪文に。",
-    "ほめられたら、斜めににじむ。",
-    "二度寝を守る会、会員です。",
-    "正しい答えより、あたたかい耳。",
-    "小さくうなずく勇者になりたい。",
-    "転んだら、土の味見して立ち直る。",
-    "好きな曲のサビで心ばんざい。",
-    "完璧じゃなくて、合格点で進む。",
-    "おにぎり一個のちからを信じてる。",
-    "となりと比べない宣言、更新中。",
-    "あくびも立派な直立です。",
-    "今日の自分に、ひそか拍手。",
-    "風が強くても、すこし笑う。",
-    "まちがえても、ページはめくれる。",
-    "丘の住民として、やさしく立つ。",
-  ];
+  // 丘のみんなのちかい（API不通時のフォールバック）— lib/vows-seed.mjs と同一ソース
+  const communityVows = [...VOW_SEEDS];
   const VOW_STORAGE_KEY = "haniwa-kyo-vows";
   const userVows = [];
   let remoteVows = [];
@@ -808,28 +793,13 @@
     return ok;
   };
 
-  const showVowOnHero = (vow) => {
-    const text = String(vow || "").trim();
-    if (!text) return;
-    userVows.unshift(text);
-    if (userVows.length > 12) userVows.length = 12;
-    saveStoredVow(text);
-    rememberWhisper(text);
-    // みんなの丘へ共有（失敗しても入信自体は成功）
-    shareVowRemote(text).then((result) => {
-      if (result.ok) refreshRemoteVows();
-    });
-
-    // 入信後にページ先頭へ戻さない。ヒーローが見えているときだけ一度浮かべる
-    const heroVisible = window.scrollY < window.innerHeight * 0.55;
-    if (!heroVisible) return;
-
-    spawnVoiceBubble(text, { isVow: true, force: true });
-  };
-
   if (voiceField && voiceStage && !reduceMotion) {
-    setTimeout(spawnWhisper, 2200);
-    setInterval(spawnWhisper, 10000);
+    setTimeout(() => {
+      if (pageVisible) spawnWhisper();
+    }, 2200);
+    setInterval(() => {
+      if (pageVisible) spawnWhisper();
+    }, 10000);
   }
 
   // フリックで回る埴輪（初期静止 → 強さに応じた速さ → 自然減速）
@@ -853,31 +823,53 @@
     let lastSpinWhisperAt = 0;
     const SPIN_MAX_LIVE = 6;
     // 約12回転に1回、住民の顔にちらっと変身
-    const frontImg = haniwa.querySelector(".haniwa-face--front");
+    const frontFace = haniwa.querySelector(".haniwa-face--front");
+    const frontImg = frontFace?.querySelector("img") || frontFace;
+    const frontSource = frontFace?.querySelector("source") || null;
     const superFlash = document.getElementById("hero-super-flash");
     const heroEl = document.querySelector(".hero");
-    const defaultFrontSrc =
-      frontImg?.getAttribute("src") || "assets/haniwa-front.png";
+    const defaultFrontBase = "assets/haniwa-front";
     const altFaces = [
-      "assets/resident-a.png",
-      "assets/resident-b.png",
-      "assets/resident-c.png",
-      "assets/resident-d.png",
-      "assets/resident-e.png",
-      "assets/resident-f.png",
-      "assets/resident-g.png",
-      "assets/resident-h.png",
+      "assets/resident-a",
+      "assets/resident-b",
+      "assets/resident-c",
+      "assets/resident-d",
+      "assets/resident-e",
+      "assets/resident-f",
+      "assets/resident-g",
+      "assets/resident-h",
     ];
     const secretFaces = [
-      "assets/resident-secret-a.png",
-      "assets/resident-secret-b.png",
-      "assets/resident-secret-c.png",
+      "assets/resident-secret-a",
+      "assets/resident-secret-b",
+      "assets/resident-secret-c",
     ];
-    const superSecretFace = "assets/resident-secret-super.png";
-    [...altFaces, ...secretFaces, superSecretFace].forEach((src) => {
-      const pre = new Image();
-      pre.src = src;
-    });
+    const superSecretFace = "assets/resident-secret-super";
+    let facesPreloaded = false;
+    const preloadFaces = () => {
+      if (facesPreloaded) return;
+      facesPreloaded = true;
+      [...altFaces, ...secretFaces, superSecretFace].forEach((base) => {
+        const pre = new Image();
+        pre.src = `${base}.webp`;
+      });
+    };
+    const scheduleFacePreload = () => {
+      const run = () => preloadFaces();
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(run, { timeout: 4000 });
+      } else {
+        setTimeout(run, 1800);
+      }
+    };
+    scheduleFacePreload();
+    const setFrontFace = (base) => {
+      if (!frontImg) return;
+      if (frontSource) {
+        frontSource.srcset = `${base}-512.webp 512w, ${base}.webp 1024w`;
+      }
+      frontImg.src = `${base}.png`;
+    };
     let faceAccDeg = 0;
     let faceSwapTimer = 0;
     let lastAltFace = "";
@@ -934,7 +926,8 @@
         }
       }
       lastAltFace = pick;
-      frontImg.src = pick;
+      preloadFaces();
+      setFrontFace(pick);
       haniwa.classList.add("is-face-swap");
       haniwa.classList.toggle("is-face-secret", useSecret || useSuper);
       haniwa.classList.toggle("is-face-super-secret", useSuper);
@@ -955,7 +948,7 @@
       window.clearTimeout(faceSwapTimer);
       const hold = useSuper ? FACE_HOLD_MS + 360 : useSecret ? FACE_HOLD_MS + 160 : FACE_HOLD_MS;
       faceSwapTimer = window.setTimeout(() => {
-        frontImg.src = defaultFrontSrc;
+        setFrontFace(defaultFrontBase);
         haniwa.classList.remove("is-face-swap", "is-face-secret", "is-face-super-secret");
       }, hold);
     };
@@ -1056,11 +1049,36 @@
     stage.addEventListener("pointercancel", endDrag);
     stage.addEventListener("lostpointercapture", endDrag);
 
+    const nudgeSpin = (degPerSec) => {
+      speed = Math.max(-maxSpeed, Math.min(maxSpeed, degPerSec));
+      stage.classList.add("is-hint-gone");
+    };
+
+    stage.addEventListener("keydown", (e) => {
+      if (reduceMotion) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        nudgeSpin(520);
+        accumulateSpin(18, 520);
+        render();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nudgeSpin(-520);
+        accumulateSpin(18, 520);
+        render();
+      } else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        nudgeSpin(e.key === "Enter" ? -380 : 380);
+        whisperFromSpin({ force: true, burst: 1, cooldown: 0 });
+        render();
+      }
+    });
+
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
 
-      if (!dragging && !reduceMotion && Math.abs(speed) > 0) {
+      if (pageVisible && !dragging && !reduceMotion && Math.abs(speed) > 0) {
         const delta = speed * dt;
         angle = (angle + delta) % 360;
         if (angle < 0) angle += 360;
@@ -1083,6 +1101,7 @@
   let stood = 0;
   if (standEl && !reduceMotion) {
     setInterval(() => {
+      if (!pageVisible) return;
       stood += 1;
       standEl.textContent = String(stood);
     }, 1000);
@@ -1105,6 +1124,7 @@
 
   if (believerEl && standingEl && !reduceMotion) {
     setInterval(() => {
+      if (!pageVisible) return;
       believers = jitterStat(believers, 9000, 18000, 37);
       standingNow = jitterStat(standingNow, 80, 900, 11);
       believerEl.textContent = formatNum(believers);
@@ -1150,7 +1170,7 @@
     );
   }
 
-  // カードレール：ゆっくり自動ループ ＋ ドラッグ操作
+  // カードレール：全部入るなら静止、はみ出すときだけ自動ループ
   document.querySelectorAll(".card-rail").forEach((rail) => {
     let dragging = false;
     let moved = false;
@@ -1159,26 +1179,38 @@
     let paused = false;
     let resumeTimer = 0;
     let loopWidth = 0;
-    let scrollCarry = 0; // 小数pxを蓄積（scrollLeftの切り捨て対策）
+    let needsLoop = false;
+    let scrollCarry = 0;
     const autoSpeed = 28; // px/sec
-
-    // シームレスループ用に中身を複製
     const originals = [...rail.children];
-    originals.forEach((child) => {
-      const clone = child.cloneNode(true);
-      clone.setAttribute("aria-hidden", "true");
-      clone.classList.remove("reveal", "is-visible");
-      clone.querySelectorAll(".reveal, .is-visible").forEach((el) => {
-        el.classList.remove("reveal", "is-visible");
-      });
-      rail.appendChild(clone);
-    });
+    const clones = [];
+    const hint = rail.closest(".section")?.querySelector(".swipe-hint");
 
-    const measureLoop = () => {
+    const clearClones = () => {
+      while (clones.length) {
+        const node = clones.pop();
+        node.remove();
+      }
+    };
+
+    const ensureClones = () => {
+      if (clones.length) return;
+      originals.forEach((child) => {
+        const clone = child.cloneNode(true);
+        clone.setAttribute("aria-hidden", "true");
+        clone.classList.remove("reveal", "is-visible");
+        clone.querySelectorAll(".reveal, .is-visible").forEach((el) => {
+          el.classList.remove("reveal", "is-visible");
+        });
+        rail.appendChild(clone);
+        clones.push(clone);
+      });
+    };
+
+    const measureLoopWidth = () => {
       const first = rail.children[0];
       const mid = rail.children[originals.length];
       if (first && mid) {
-        // 複製セット先頭までの距離＝1ループ幅（スクロール位置に依存しない）
         loopWidth = mid.getBoundingClientRect().left - first.getBoundingClientRect().left;
       } else {
         loopWidth = rail.scrollWidth / 2;
@@ -1187,15 +1219,55 @@
         loopWidth = rail.scrollWidth / 2;
       }
     };
-    measureLoop();
-    requestAnimationFrame(measureLoop);
-    window.addEventListener("resize", measureLoop);
+
+    const updateRailMode = () => {
+      // いったん複製を外して「全部入るか」を測る
+      clearClones();
+      rail.classList.add("is-fit");
+      rail.classList.remove("is-looping");
+      rail.scrollLeft = 0;
+
+      // fit レイアウトで均等分割したとき、本来の最小幅より縮むならはみ出し扱い
+      const gap = parseFloat(getComputedStyle(rail).columnGap || getComputedStyle(rail).gap) || 0;
+      const padL = parseFloat(getComputedStyle(rail).paddingLeft) || 0;
+      const padR = parseFloat(getComputedStyle(rail).paddingRight) || 0;
+      const inner = Math.max(0, rail.clientWidth - padL - padR);
+      const minCard = window.innerWidth >= 900 ? 168 : 240;
+      const natural =
+        originals.length * minCard + Math.max(0, originals.length - 1) * gap;
+      needsLoop = natural > inner + 1;
+
+      if (needsLoop && !reduceMotion) {
+        rail.classList.remove("is-fit");
+        rail.classList.add("is-looping");
+        ensureClones();
+        measureLoopWidth();
+        if (hint) hint.classList.remove("is-idle");
+      } else {
+        needsLoop = false;
+        loopWidth = 0;
+        rail.classList.add("is-fit");
+        rail.classList.remove("is-looping");
+        rail.scrollLeft = 0;
+        if (hint) hint.classList.add("is-idle");
+      }
+    };
+
+    let measureTimer = 0;
+    const scheduleUpdate = () => {
+      window.clearTimeout(measureTimer);
+      measureTimer = window.setTimeout(updateRailMode, 120);
+    };
+
+    updateRailMode();
+    requestAnimationFrame(updateRailMode);
+    window.addEventListener("resize", scheduleUpdate);
     if ("ResizeObserver" in window) {
-      new ResizeObserver(measureLoop).observe(rail);
+      new ResizeObserver(scheduleUpdate).observe(rail);
     }
 
     const wrapScroll = () => {
-      if (loopWidth <= 0) return;
+      if (!needsLoop || loopWidth <= 0) return;
       while (rail.scrollLeft >= loopWidth) {
         rail.scrollLeft -= loopWidth;
       }
@@ -1205,6 +1277,7 @@
     };
 
     const pauseAuto = (ms = 0) => {
+      if (!needsLoop) return;
       paused = true;
       window.clearTimeout(resumeTimer);
       if (ms > 0) {
@@ -1215,6 +1288,7 @@
     };
 
     const resumeAuto = () => {
+      if (!needsLoop) return;
       window.clearTimeout(resumeTimer);
       if (!dragging) paused = false;
     };
@@ -1224,8 +1298,7 @@
       const tick = (now) => {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        if (!paused && !dragging && loopWidth > 1) {
-          // ブラウザは scrollLeft を整数化しがちなので、端数を持ち越す
+        if (pageVisible && needsLoop && !paused && !dragging && loopWidth > 1) {
           scrollCarry += autoSpeed * dt;
           const step = scrollCarry >= 1 ? Math.floor(scrollCarry) : 0;
           if (step > 0) {
@@ -1239,7 +1312,6 @@
       requestAnimationFrame(tick);
     }
 
-    // マウスホバー中だけ一時停止（タッチの pointerenter 取り残し防止）
     rail.addEventListener("pointerenter", (e) => {
       if (e.pointerType === "mouse") pauseAuto();
     });
@@ -1263,7 +1335,7 @@
     );
 
     rail.addEventListener("pointerdown", (e) => {
-      // タッチはブラウザ標準の横スクロールに任せる
+      if (!needsLoop) return;
       if (e.pointerType === "touch") return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       dragging = true;
@@ -1280,7 +1352,7 @@
     });
 
     rail.addEventListener("pointermove", (e) => {
-      if (!dragging) return;
+      if (!dragging || !needsLoop) return;
       const dx = e.clientX - startX;
       if (Math.abs(dx) > 4) moved = true;
       rail.scrollLeft = startScroll - dx;
@@ -1385,6 +1457,8 @@
         pad.classList.add("is-done");
         pad.classList.toggle("is-tilted", endTilted);
         pad.classList.remove("is-wobbly");
+        pad.disabled = true;
+        pad.setAttribute("aria-disabled", "true");
         if (ritualLabel) {
           ritualLabel.textContent = endTilted ? pick(doneWobbly) : pick(doneUpright);
         }
@@ -1403,282 +1477,7 @@
   const nameInput = document.getElementById("join-name");
   const vowInput = document.getElementById("join-vow");
 
-  // スペース・記号除去＋ネットスラングを本語へ寄せて判定
-  const normalizeSafe = (raw) => {
-    let s = String(raw || "")
-      .normalize("NFKC")
-      .toLowerCase()
-      .replace(/[\u30a1-\u30f6]/g, (ch) =>
-        String.fromCharCode(ch.charCodeAt(0) - 0x60)
-      )
-      .replace(/[\s\p{Z}\u200B-\u200D\uFEFF\u2060]/gu, "")
-      .replace(
-        /[・･.…‥.。,、\-–—―_/\\|｜_＿＊*★☆♪!！?？#＃@＠'"`~^+=（）()「」『』【】[\]{}<>＜＞]/g,
-        ""
-      );
-
-    // タヒね／氏ね／基地外 など
-    s = s
-      .replace(/たひ/g, "し")
-      .replace(/氏/g, "し")
-      .replace(/死/g, "し")
-      .replace(/逝/g, "し")
-      .replace(/殺/g, "ころ")
-      .replace(/基地外/g, "きちがい")
-      .replace(/気違い|気狂い/g, "きちがい")
-      .replace(/苛め|虐め|いぢめ/g, "いじめ")
-      .replace(/晒/g, "さら")
-      .replace(/えっち|ｴﾁ/g, "えろ")
-      .replace(/ｈ(?=な|に)/g, "えろ")
-      .replace(/h(?=な|に)/g, "えろ");
-
-    return s;
-  };
-
-  const digitsOnly = (raw) => String(raw || "").normalize("NFKC").replace(/\D/g, "");
-
-  const NG_WORDS = {
-    vulgar: [
-      "ちんこ",
-      "ちんぽ",
-      "まんこ",
-      "おめこ",
-      "うんこ",
-      "うんち",
-      "しっこ",
-      "おしっこ",
-      "セックス",
-      "せっくす",
-      "エロ",
-      "えろ",
-      "おっぱい",
-      "ぱいぱい",
-      "乳首",
-      "ちくび",
-      "ペニス",
-      "ぺにす",
-      "ヴァギナ",
-      "ばぎな",
-      "フェラ",
-      "ふぇら",
-      "オナニー",
-      "おなにー",
-      "マスターベーション",
-      "やりまん",
-      "やりちん",
-      "ポルノ",
-      "ぽるの",
-      "ヌード",
-      "ぬーど",
-      "あなる",
-      "アナル",
-      "くそったれ",
-      "fuck",
-      "shit",
-      "bitch",
-      "dick",
-      "pussy",
-      "porn",
-      "sex",
-      "nude",
-      "hentai",
-    ],
-    rude: [
-      "ころす",
-      "ころせ",
-      "ころして",
-      "しね",
-      "しねよ",
-      "しんで",
-      "くたばれ",
-      "ぶちころす",
-      "しばく",
-      "しばき",
-      "刺すぞ",
-      "銃で",
-      "ばくはつ",
-      "爆発",
-      "テロ",
-      "kill",
-      "くそがき",
-      "きちがい",
-      "ばかやろう",
-      "くそやろう",
-      "のろい",
-      "のろえ",
-    ],
-    bully: [
-      "いじめ",
-      "苛め",
-      "いぢめ",
-      "仲間はずれ",
-      "仲間外れ",
-      "のけもの",
-      "村八分",
-      "晒す",
-      "さらす",
-      "うざい",
-      "きしょい",
-      "きめえ",
-      "きめぇ",
-      "ぶす",
-      "でぶ",
-      "消えろ",
-      "のろま",
-      "がいじ",
-      "部落",
-      "在日",
-      "チョン",
-    ],
-    harm: [
-      "じさつ",
-      "しにたい",
-      "しんでしま",
-      "きえたい",
-      "りすとかっと",
-      "りすか",
-      "くびつり",
-      "首つり",
-      "オーバードーズ",
-      "オーバドーズ",
-    ],
-    adult: [
-      "たばこ",
-      "タバコ",
-      "煙草",
-      "酒飲む",
-      "さけのみ",
-      "ビール",
-      "日本酒",
-      "焼酎",
-      "大麻",
-      "覚せい剤",
-      "覚醒剤",
-      "ドラッグ",
-      "でらっぐ",
-      "weed",
-      "drug",
-      "出会い系",
-      "せふれ",
-      "セフレ",
-      "パパ活",
-      "ぱぱかつ",
-      "援助交際",
-      "えんこう",
-      "援交",
-      "下着",
-      "下着写真",
-    ],
-    personal: [
-      "本名",
-      "苗字",
-      "名字",
-      "住所",
-      "じゅうしょ",
-      "電話番号",
-      "でんわばんごう",
-      "携帯番号",
-      "けいたい",
-      "メールアドレス",
-      "らいんid",
-      "lineid",
-      "ラインid",
-      "ディスコード",
-      "discord",
-      "インスタ",
-      "instagram",
-      "学校名",
-      "がっこうめい",
-      "学年",
-      "クラス",
-      "出席番号",
-      "パスワード",
-      "pasuwado",
-      "家の場所",
-      "うちのばしょ",
-    ],
-  };
-
-  const MSG = {
-    vulgar: "そのことばは、丘ではつかえないよ。やさしいことばで書いてみて。",
-    rude: "乱暴なことばはつかえないよ。はにわは、やわらかいことばで立つ。",
-    bully: "だれかを傷つけることばは、はにわ教ではつかえないよ。",
-    harm: "つらいときはひとりでかかえず、身近な大人や相談できる人に話してみてね。",
-    adult: "やさしいことばの丘だから、その内容は入力できないよ。",
-    personal: "本名・住所・連絡先・学校の情報は入れないでね。はにわネームでどうぞ。",
-    empty: "空欄のままでは立てないよ。",
-    short: "もうすこしことばを足してみて。",
-    long: "文字数がおおすぎるよ。すこし短くしてみて。",
-    rate: "ちょっと間をあけてから、もういちど立ててね。",
-    other: "その内容は入力できないよ。やわらかいことばで書きなおしてみて。",
-  };
-
-  const looksPersonal = (raw, field) => {
-    const t = String(raw || "").trim();
-    const n = normalizeSafe(t);
-    const d = digitsOnly(t);
-    // スペースだけ除いた文字列（住所・学年など用）
-    const spacedOut = t.replace(/[\s\p{Z}\u200B-\u200D\uFEFF]/gu, "");
-
-    if (/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(spacedOut)) return "personal";
-    if (/(?:https?:\/\/|www\.)\S+/i.test(spacedOut)) return "personal";
-    if (
-      /(?:line|discord|instagram|tiktok|twitter|x)/i.test(n) &&
-      /(?:id|アカウント|あかいんと)/.test(n)
-    ) {
-      return "personal";
-    }
-    // 郵便番号・電話（あいだのスペース／ハイフン付きも）
-    if (/^\d{7}$/.test(d) && /(?:〒|郵便|都|道|府|県|市|区|町|村)/.test(t + n)) {
-      return "personal";
-    }
-    if (/^0\d{9,10}$/.test(d)) return "personal";
-    if (
-      /(?:都|道|府|県|市|区|町|村|丁目|番地|号室|マンション|アパート|団地)/.test(spacedOut) &&
-      /\d/.test(spacedOut)
-    ) {
-      return "personal";
-    }
-    if (/(?:都|道|府|県).{0,12}(?:市|区|町|村)/.test(spacedOut)) return "personal";
-    if (/\d年\d組/.test(n) || /\d\s*年\s*\d\s*組/.test(t)) return "personal";
-
-    // 本名っぽい漢字フルネーム（間のスペースあり／なし）
-    if (
-      field === "name" &&
-      /^[一-龥々〆ヵヶ]+$/.test(spacedOut) &&
-      spacedOut.length >= 3 &&
-      spacedOut.length <= 6
-    ) {
-      return "personal";
-    }
-    // First Last の英語本名っぽいもの（間のスペース複数も）
-    if (field === "name" && /^[A-Za-z]{2,12}(?:\s+[A-Za-z]{2,12})+$/.test(t)) {
-      return "personal";
-    }
-    return null;
-  };
-
-  const findNgCategory = (raw, field) => {
-    const t = String(raw || "").trim();
-    if (!t) return "empty";
-    if (field === "vow" && [...t].length > 40) return "long";
-    if (field === "name" && [...t].length > 20) return "long";
-
-    // 「ち ん こ」「い　じ　め」などもスペース除去後に判定
-    const n = normalizeSafe(t);
-    if (n.length < 2) return "short";
-
-    const personalHit = looksPersonal(t, field);
-    if (personalHit) return personalHit;
-
-    for (const [cat, words] of Object.entries(NG_WORDS)) {
-      for (const w of words) {
-        const nw = normalizeSafe(w);
-        if (nw && n.includes(nw)) return cat;
-      }
-    }
-    return null;
-  };
+  // 入力ガードは lib/vow-guard.mjs を正とする（MSG / findNgCategory）
 
   const setFormNote = (text, isError = false) => {
     if (!note) return;
@@ -1751,9 +1550,15 @@
     input.addEventListener("blur", () => validateField(input, field));
   });
 
+  const submitBtn = document.getElementById("join-submit") || form?.querySelector('button[type="submit"]');
+  const formFollowup = document.getElementById("form-followup");
+  let joinPending = false;
+
   if (form && note) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (joinPending) return;
+
       const nameOk = validateField(nameInput, "name");
       const vowOk = validateField(vowInput, "vow");
       if (!nameOk || !vowOk) {
@@ -1768,19 +1573,50 @@
         return;
       }
 
+      joinPending = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.setAttribute("aria-busy", "true");
+      }
+      if (formFollowup) formFollowup.hidden = true;
+      setFormNote("ちかいを丘に届けています…", false);
+
+      const remote = await shareVowRemote(vow);
+
+      if (!remote.ok) {
+        setFormNote(remote.message || MSG.other, true);
+        joinPending = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute("aria-busy");
+        }
+        return;
+      }
+
       setFormNote(
         `ようこそ、${name}よ。「${vow}」——ちかい、丘のみんなにもそっと届いたよ。`,
         false
       );
-      const btn = form.querySelector('button[type="submit"]');
-      if (btn) {
-        const r = btn.getBoundingClientRect();
+      if (formFollowup) formFollowup.hidden = false;
+      if (submitBtn) {
+        const r = submitBtn.getBoundingClientRect();
         burst(r.left + r.width / 2, r.top + r.height / 2);
       }
-      showVowOnHero(vow);
+      userVows.unshift(vow);
+      if (userVows.length > 40) userVows.length = 40;
+      saveStoredVow(vow);
+      rememberWhisper(vow);
+      refreshRemoteVows();
+      const heroVisible = window.scrollY < window.innerHeight * 0.55;
+      if (heroVisible) spawnVoiceBubble(vow, { isVow: true, force: true });
       form.reset();
       nameInput?.setCustomValidity("");
       vowInput?.setCustomValidity("");
+      joinPending = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute("aria-busy");
+      }
     });
   }
 
@@ -2039,6 +1875,7 @@
   const diagnoseQuestion = document.getElementById("diagnose-question");
   const diagnoseChoices = document.getElementById("diagnose-choices");
   const resultArt = document.getElementById("diagnose-result-art");
+  const resultArtWebp = document.getElementById("diagnose-result-art-webp");
   const resultName = document.getElementById("diagnose-result-name");
   const resultTag = document.getElementById("diagnose-result-tag");
   const resultNote = document.getElementById("diagnose-result-note");
@@ -2047,6 +1884,8 @@
   const secretBadge = document.getElementById("diagnose-secret-badge");
   const diagnoseSparkles = document.getElementById("diagnose-sparkles");
   const diagnosePanel = document.getElementById("diagnose-panel");
+  const diagnoseShare = document.getElementById("diagnose-share");
+  let lastDiagnoseShareText = "";
 
   let diagnoseIndex = 0;
   let diagnoseScores = {};
@@ -2182,13 +2021,26 @@
       resultArt.src = type.src;
       resultArt.alt = type.name;
     }
+    if (resultArtWebp) {
+      const base = String(type.src || "").replace(/\.png$/i, "");
+      resultArtWebp.srcset = `${base}-512.webp`;
+    }
     if (resultName) resultName.textContent = type.name;
     if (resultTag) resultTag.textContent = type.tag;
     if (resultNote) resultNote.textContent = type.note;
     if (isSecret) fillSparkles();
     else if (diagnoseSparkles) diagnoseSparkles.innerHTML = "";
 
+    lastDiagnoseShareText = `わたしは「${type.name}」——${type.tag}／はにわ教`;
+    if (diagnoseShare) {
+      diagnoseShare.hidden = false;
+    }
+
     showDiagnoseView("result");
+    window.setTimeout(() => {
+      resultName?.focus({ preventScroll: true });
+      resultName?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+    }, 40);
   };
 
   const startDiagnose = () => {
@@ -2208,6 +2060,11 @@
     if (resultLabel) resultLabel.textContent = "診断結果";
     if (resultYou) resultYou.textContent = "あなたは";
     if (diagnoseSparkles) diagnoseSparkles.innerHTML = "";
+    if (diagnoseShare) {
+      diagnoseShare.hidden = true;
+      diagnoseShare.textContent = "結果をシェア";
+    }
+    lastDiagnoseShareText = "";
     showDiagnoseView("quiz");
     renderDiagnoseQuestion();
   };
@@ -2218,4 +2075,35 @@
   if (diagnoseRetry) {
     diagnoseRetry.addEventListener("click", startDiagnose);
   }
-})();
+
+  if (diagnoseShare) {
+    diagnoseShare.addEventListener("click", async () => {
+      const text = lastDiagnoseShareText || "はにわ教で診断したよ。";
+      const shareData = {
+        title: "はにわ教診断",
+        text,
+        url: window.location.href.split("#")[0] + "#diagnose",
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      try {
+        await navigator.clipboard.writeText(`${text}\n${shareData.url}`);
+        diagnoseShare.textContent = "コピーしたよ";
+        window.setTimeout(() => {
+          diagnoseShare.textContent = "結果をシェア";
+        }, 1600);
+      } catch (_) {
+        diagnoseShare.textContent = "コピーできなかった";
+        window.setTimeout(() => {
+          diagnoseShare.textContent = "結果をシェア";
+        }, 1600);
+      }
+    });
+  }
+

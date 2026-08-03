@@ -8,6 +8,27 @@
       name="description"
       content="はにわ教公式（架空）ホームページ。くらべず、ゆるして、すこし笑う——やさしい心の教えです。"
     />
+    <meta name="theme-color" content="#4f6b55" />
+    <link rel="canonical" href="https://haniwa-kyo.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:site_name" content="はにわ教" />
+    <meta property="og:title" content="はにわ教 — ただ、静かに立つ" />
+    <meta
+      property="og:description"
+      content="くらべず、ゆるして、すこし笑う——やさしい心の教え（架空）です。"
+    />
+    <meta property="og:url" content="https://haniwa-kyo.vercel.app/" />
+    <meta property="og:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="はにわ教 — ただ、静かに立つ" />
+    <meta
+      name="twitter:description"
+      content="くらべず、ゆるして、すこし笑う——やさしい心の教え（架空）です。"
+    />
+    <meta name="twitter:image" content="https://haniwa-kyo.vercel.app/assets/og-image.png" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
@@ -25,7 +46,7 @@
     <div class="cursor-blob" id="cursor-blob" aria-hidden="true"></div>
     <canvas class="dust-canvas" id="dust-canvas" aria-hidden="true"></canvas>
 
-    <a class="skip-link" href="#teachings">本文へスキップ</a>
+    <a class="skip-link" href="#main-content">本文へスキップ</a>
 
     <header class="site-header" id="site-header">
       <nav class="nav" aria-label="メイン">
@@ -33,21 +54,23 @@
         <div class="nav-links">
           <a href="#teachings">教え</a>
           <a href="#rites">日課</a>
+          <a href="#ritual">儀式</a>
+          <a href="#gallery">図鑑</a>
           <a href="#diagnose">診断</a>
           <a href="#join">入信</a>
         </div>
       </nav>
     </header>
 
-    <main id="top">
+    <main id="main-content">
       <!-- HERO -->
-      <section class="hero" aria-label="ヒーロー">
-        <div class="hero-visual" aria-hidden="true">
-          <div class="hero-sky" data-parallax="0.15"></div>
-          <div class="cloud cloud-a"></div>
-          <div class="cloud cloud-b"></div>
-          <div class="hero-mound" data-parallax="0.08"></div>
-          <div class="hero-grain"></div>
+      <section class="hero" id="top" aria-label="ヒーロー">
+        <div class="hero-visual">
+          <div class="hero-sky" data-parallax="0.15" aria-hidden="true"></div>
+          <div class="cloud cloud-a" aria-hidden="true"></div>
+          <div class="cloud cloud-b" aria-hidden="true"></div>
+          <div class="hero-mound" data-parallax="0.08" aria-hidden="true"></div>
+          <div class="hero-grain" aria-hidden="true"></div>
           <div class="hero-super-flash" id="hero-super-flash" aria-hidden="true"></div>
           <div class="voice-field" id="voice-field" aria-hidden="true"></div>
 
@@ -55,28 +78,46 @@
             class="spin-stage"
             id="spin-stage"
             data-parallax="0.12"
-            role="img"
-            aria-label="はにわ。フリックすると回り、ことばが浮かびます"
-            title="フリックして回す（ことばが浮かぶ）"
+            role="button"
+            tabindex="0"
+            aria-label="はにわ。左右にドラッグ、または矢印キー・スペースで回せます。回すとことばが浮かびます"
+            title="ドラッグ／矢印キーで回す（ことばが浮かぶ）"
           >
-            <div class="spin-shadow" id="spin-shadow"></div>
-            <div class="haniwa-3d" id="haniwa-spin">
-              <img
-                class="haniwa-photo haniwa-face haniwa-face--front"
-                src="assets/haniwa-front.png"
-                alt=""
-                width="1024"
-                height="1024"
-                draggable="false"
-              />
-              <img
-                class="haniwa-photo haniwa-face haniwa-face--back"
-                src="assets/haniwa-back.png"
-                alt=""
-                width="1024"
-                height="1024"
-                draggable="false"
-              />
+            <div class="spin-shadow" id="spin-shadow" aria-hidden="true"></div>
+            <div class="haniwa-3d" id="haniwa-spin" aria-hidden="true">
+              <picture class="haniwa-face haniwa-face--front">
+                <source
+                  type="image/webp"
+                  srcset="assets/haniwa-front-512.webp 512w, assets/haniwa-front.webp 1024w"
+                  sizes="(max-width: 720px) 78vw, min(42vw, 480px)"
+                />
+                <img
+                  class="haniwa-photo"
+                  src="assets/haniwa-front.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                  draggable="false"
+                  fetchpriority="high"
+                  decoding="async"
+                />
+              </picture>
+              <picture class="haniwa-face haniwa-face--back">
+                <source
+                  type="image/webp"
+                  srcset="assets/haniwa-back-512.webp 512w, assets/haniwa-back.webp 1024w"
+                  sizes="(max-width: 720px) 78vw, min(42vw, 480px)"
+                />
+                <img
+                  class="haniwa-photo"
+                  src="assets/haniwa-back.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                  draggable="false"
+                  decoding="async"
+                />
+              </picture>
             </div>
             <p class="spin-hint" id="spin-hint">回すと、ことばが浮かぶ</p>
           </div>
@@ -88,6 +129,9 @@
           <p class="lede">
             くらべず、ゆるして、すこし笑う。<br />
             ——それが、はにわ教のすべてです。
+          </p>
+          <p class="hero-disclaimer">
+            ※これはユーモラスな架空の教団サイトです。実在の宗教とは関係ありません。
           </p>
           <div class="cta-group">
             <a class="btn btn-primary magnetic" href="#join">はにわになる</a>
@@ -111,90 +155,94 @@
         </div>
       </div>
 
-      <!-- TEACHINGS -->
-      <section id="teachings" class="section teachings">
-        <div class="section-inner">
-          <p class="eyebrow reveal">教え</p>
-          <h2 class="reveal" data-split>三つの心の立て方</h2>
-          <p class="section-lead reveal">
-            むずかしいお経はありません。<br />
-            ちょっと姿勢を正すだけで、心の天気が変わります。
-          </p>
-          <p class="swipe-hint reveal" aria-hidden="true">ゆっくり自動で流れます。ドラッグでもOK</p>
-        </div>
+      <!-- TEACHINGS + RITES（PCは左右に1種類ずつ） -->
+      <div class="teachings-rites">
+        <section id="teachings" class="section teachings">
+          <div class="section-inner">
+            <p class="eyebrow reveal">教え</p>
+            <h2 class="reveal" data-split>三つの心の立て方</h2>
+            <p class="section-lead reveal">
+              むずかしいお経はありません。<br />
+              ちょっと姿勢を正すだけで、心の天気が変わります。
+            </p>
+            <p class="swipe-hint reveal" aria-hidden="true">ゆっくり自動で流れます。ドラッグでもOK</p>
+          </div>
 
-        <ol class="card-rail doctrine-list" aria-label="三つの心の立て方">
-          <li class="reveal doctrine-item card-slide" style="--i: 0">
-            <span class="doctrine-num">壱</span>
-            <div>
-              <h3>比べぬこと</h3>
-              <p>
-                はにわは、となりのはにわの腕の長さを気にしない。だれかのきらめきを見て、自分の土まで嫌いにならなくていい。
-              </p>
-            </div>
-          </li>
-          <li class="reveal doctrine-item card-slide" style="--i: 1">
-            <span class="doctrine-num">弐</span>
-            <div>
-              <h3>ゆるすこと</h3>
-              <p>
-                ちょっとした失敗は、焼きもののヒビみたいなもの。直さなくても、味になる。自分にも、友だちに、ひと息ぶんのすきまをあげよう。
-              </p>
-            </div>
-          </li>
-          <li class="reveal doctrine-item card-slide" style="--i: 2">
-            <span class="doctrine-num">参</span>
-            <div>
-              <h3>笑うこと</h3>
-              <p>
-                埴輪の顔は、まじめなのにどこか笑っている。くやしい日ほど、口をちょっと上げてみる。それだけで、心の風通しがよくなる。
-              </p>
-            </div>
-          </li>
-        </ol>
-      </section>
+          <ol class="card-rail doctrine-list" aria-label="三つの心の立て方">
+            <li class="reveal doctrine-item card-slide" style="--i: 0">
+              <span class="doctrine-num">壱</span>
+              <div>
+                <h3>比べぬこと</h3>
+                <p>
+                  はにわは、となりのはにわの腕の長さを気にしない。だれかのきらめきを見て、自分の土まで嫌いにならなくていい。
+                </p>
+              </div>
+            </li>
+            <li class="reveal doctrine-item card-slide" style="--i: 1">
+              <span class="doctrine-num">弐</span>
+              <div>
+                <h3>ゆるすこと</h3>
+                <p>
+                  ちょっとした失敗は、焼きもののヒビみたいなもの。直さなくても、味になる。自分にも、友だちに、ひと息ぶんのすきまをあげよう。
+                </p>
+              </div>
+            </li>
+            <li class="reveal doctrine-item card-slide" style="--i: 2">
+              <span class="doctrine-num">参</span>
+              <div>
+                <h3>笑うこと</h3>
+                <p>
+                  埴輪の顔は、まじめなのにどこか笑っている。くやしい日ほど、口をちょっと上げてみる。それだけで、心の風通しがよくなる。
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
 
-      <!-- RITES -->
-      <section id="rites" class="section rites">
-        <div class="section-inner">
-          <p class="eyebrow reveal">日課</p>
-          <h2 class="reveal" data-split>一日のはにわ修行</h2>
-          <p class="section-lead reveal">
-            道具はいりません。<br />
-            息を三回ととのえるだけで、古墳の風が部屋に入ります。
-          </p>
-          <p class="swipe-hint reveal" aria-hidden="true">ゆっくり自動で流れます。ドラッグでもOK</p>
-        </div>
+        <section id="rites" class="section rites">
+          <div class="section-inner">
+            <p class="eyebrow reveal">日課</p>
+            <h2 class="reveal" data-split>一日のはにわ修行</h2>
+            <p class="section-lead reveal">
+              道具はいりません。<br />
+              息を三回ととのえるだけで、古墳の風が部屋に入ります。
+            </p>
+            <p class="swipe-hint reveal" aria-hidden="true">ゆっくり自動で流れます。ドラッグでもOK</p>
+          </div>
 
-        <div class="card-rail rite-list" id="rite-rail" aria-label="一日のはにわ修行">
-          <article class="rite card-slide reveal">
-            <span class="rite__time">朝</span>
-            <h3>ねむけの直立</h3>
-            <p>起きてすぐ、スマホより先に空を見る。右手を心のなかで上げて、「きょうも立つぞ」とひと言。</p>
-          </article>
-          <article class="rite card-slide reveal">
-            <span class="rite__time">昼</span>
-            <h3>ひと息の沈黙</h3>
-            <p>だれかとぶつかっても、すぐ言い返さない。はにわみたいに、三秒だけ立つ。だいたい、それで雲が流れる。</p>
-          </article>
-          <article class="rite card-slide reveal">
-            <span class="rite__time">夕</span>
-            <h3>みまもりの礼</h3>
-            <p>友だちがぼやいたら、正解を言わなくていい。目をふたつ開けて、口をひとつ静かにする。</p>
-          </article>
-          <article class="rite card-slide reveal">
-            <span class="rite__time">夜</span>
-            <h3>土へのありがとう</h3>
-            <p>きょう立てた自分を、すこしほめる。へんな一日も、焼きものの味のうち。</p>
-          </article>
-        </div>
-      </section>
+          <ol class="card-rail rite-list" id="rite-rail" aria-label="一日のはにわ修行">
+            <li class="rite card-slide reveal">
+              <span class="rite__time">朝</span>
+              <h3>ねむけの直立</h3>
+              <p>起きてすぐ、スマホより先に空を見る。右手を心のなかで上げて、「きょうも立つぞ」とひと言。</p>
+            </li>
+            <li class="rite card-slide reveal">
+              <span class="rite__time">昼</span>
+              <h3>ひと息の沈黙</h3>
+              <p>だれかとぶつかっても、すぐ言い返さない。はにわみたいに、三秒だけ立つ。だいたい、それで雲が流れる。</p>
+            </li>
+            <li class="rite card-slide reveal">
+              <span class="rite__time">夕</span>
+              <h3>みまもりの礼</h3>
+              <p>友だちがぼやいたら、正解を言わなくていい。目をふたつ開けて、口をひとつ静かにする。</p>
+            </li>
+            <li class="rite card-slide reveal">
+              <span class="rite__time">夜</span>
+              <h3>土へのありがとう</h3>
+              <p>きょう立てた自分を、すこしほめる。へんな一日も、焼きものの味のうち。</p>
+            </li>
+          </ol>
+        </section>
+      </div>
 
       <!-- STATS -->
       <section class="section stats" aria-label="はにわの記録">
         <div class="section-inner stats-inner">
           <p class="eyebrow reveal">記録</p>
           <h2 class="reveal" data-split>世界が立つあいだ</h2>
+          <p class="stats-note reveal">
+            ※数字はジョーク用の架空カウントです。本気の統計ではありません。
+          </p>
           <div class="stat-row">
             <div class="stat reveal">
               <p class="stat__value"><span id="believer-count">12840</span></p>
@@ -234,7 +282,7 @@
       </section>
 
       <!-- GALLERY -->
-      <section class="section gallery" aria-label="はにわ図鑑">
+      <section id="gallery" class="section gallery" aria-label="はにわ図鑑">
         <div class="section-inner">
           <p class="eyebrow reveal">図鑑</p>
           <h2 class="reveal" data-split>丘の住人たち</h2>
@@ -244,112 +292,176 @@
         </div>
         <div class="gallery-rail" id="gallery-rail">
           <figure class="gallery-item reveal" style="--i: 0">
-            <img
-              class="resident-art"
-              src="assets/resident-a.png"
-              alt="ねむけはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-a-320.webp 320w, assets/resident-a-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-a.png"
+                alt="ねむけはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>ねむけはにわ</strong>
               <p class="resident-desc">あくびも立派な直立</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 1">
-            <img
-              class="resident-art"
-              src="assets/resident-b.png"
-              alt="ばんざいはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-b-320.webp 320w, assets/resident-b-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-b.png"
+                alt="ばんざいはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>ばんざいはにわ</strong>
               <p class="resident-desc">よろこびは両手で足りない</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 2">
-            <img
-              class="resident-art"
-              src="assets/resident-c.png"
-              alt="てれはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-c-320.webp 320w, assets/resident-c-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-c.png"
+                alt="てれはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>てれはにわ</strong>
               <p class="resident-desc">正面は苦手。斜めが得意</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 3">
-            <img
-              class="resident-art"
-              src="assets/resident-d.png"
-              alt="ドヤはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-d-320.webp 320w, assets/resident-d-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-d.png"
+                alt="ドヤはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>ドヤはにわ</strong>
               <p class="resident-desc">右手を上げると、なんとなく強い</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 4">
-            <img
-              class="resident-art"
-              src="assets/resident-e.png"
-              alt="くらくらはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-e-320.webp 320w, assets/resident-e-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-e.png"
+                alt="くらくらはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>くらくらはにわ</strong>
               <p class="resident-desc">考えが回りすぎて、自分が回る</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 5">
-            <img
-              class="resident-art"
-              src="assets/resident-f.png"
-              alt="はらぺこはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-f-320.webp 320w, assets/resident-f-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-f.png"
+                alt="はらぺこはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>はらぺこはにわ</strong>
               <p class="resident-desc">ごはんまで、心がふらふら直立</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 6">
-            <img
-              class="resident-art"
-              src="assets/resident-g.png"
-              alt="びくびくはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-g-320.webp 320w, assets/resident-g-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-g.png"
+                alt="びくびくはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>びくびくはにわ</strong>
               <p class="resident-desc">「もしも」のコレクション係</p>
             </figcaption>
           </figure>
           <figure class="gallery-item reveal" style="--i: 7">
-            <img
-              class="resident-art"
-              src="assets/resident-h.png"
-              alt="のんびりはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-h-320.webp 320w, assets/resident-h-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-h.png"
+                alt="のんびりはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>のんびりはにわ</strong>
               <p class="resident-desc">急がない。それが最高のわざ</p>
@@ -363,14 +475,22 @@
             data-secret-resident
           >
             <p class="secret-badge" aria-hidden="true">SECRET</p>
-            <img
-              class="resident-art"
-              src="assets/resident-secret-a.png"
-              alt="かげぼしはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-secret-a-320.webp 320w, assets/resident-secret-a-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-secret-a.png"
+                alt="かげぼしはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>かげぼしはにわ</strong>
               <p class="resident-desc">いるのに、いない。夕方だけ出勤</p>
@@ -383,14 +503,22 @@
             data-secret-resident
           >
             <p class="secret-badge" aria-hidden="true">SECRET</p>
-            <img
-              class="resident-art"
-              src="assets/resident-secret-b.png"
-              alt="きらきらはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-secret-b-320.webp 320w, assets/resident-secret-b-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-secret-b.png"
+                alt="きらきらはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>きらきらはにわ</strong>
               <p class="resident-desc">たまに光る。理由は非公開</p>
@@ -403,14 +531,22 @@
             data-secret-resident
           >
             <p class="secret-badge" aria-hidden="true">SECRET</p>
-            <img
-              class="resident-art"
-              src="assets/resident-secret-c.png"
-              alt="よるだけはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-secret-c-320.webp 320w, assets/resident-secret-c-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-secret-c.png"
+                alt="よるだけはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>よるだけはにわ</strong>
               <p class="resident-desc">夜勤の丘の番人。昼寝は権利</p>
@@ -423,14 +559,22 @@
             data-super-secret-resident
           >
             <p class="secret-badge secret-badge--super" aria-hidden="true">SUPER SECRET</p>
-            <img
-              class="resident-art"
-              src="assets/resident-secret-super.png"
-              alt="むげんはにわ"
-              width="1024"
-              height="1024"
-              loading="lazy"
-            />
+            <picture>
+              <source
+                type="image/webp"
+                srcset="assets/resident-secret-super-320.webp 320w, assets/resident-secret-super-512.webp 512w"
+                sizes="(max-width: 820px) 28vw, 160px"
+              />
+              <img
+                class="resident-art"
+                src="assets/resident-secret-super.png"
+                alt="むげんはにわ"
+                width="1024"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <figcaption>
               <strong>むげんはにわ</strong>
               <p class="resident-desc">回し続けた人だけが、たまに会える</p>
@@ -464,26 +608,37 @@
                 1 / 4
               </p>
               <h3 class="diagnose-question" id="diagnose-question"></h3>
-              <div class="diagnose-choices" id="diagnose-choices" role="group"></div>
+              <div
+                class="diagnose-choices"
+                id="diagnose-choices"
+                role="group"
+                aria-labelledby="diagnose-question"
+              ></div>
             </div>
 
             <div class="diagnose-result" id="diagnose-result" hidden>
               <div class="diagnose-sparkles" id="diagnose-sparkles" aria-hidden="true"></div>
               <p class="diagnose-result-label" id="diagnose-result-label">診断結果</p>
               <p class="diagnose-secret-badge" id="diagnose-secret-badge" hidden>SECRET</p>
-              <img
-                class="diagnose-result-art"
-                id="diagnose-result-art"
-                src="assets/resident-a.png"
-                alt=""
-                width="1024"
-                height="1024"
-              />
+              <picture>
+                <source id="diagnose-result-art-webp" type="image/webp" srcset="assets/resident-a-512.webp" />
+                <img
+                  class="diagnose-result-art"
+                  id="diagnose-result-art"
+                  src="assets/resident-a.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                />
+              </picture>
               <p class="diagnose-result-you" id="diagnose-result-you">あなたは</p>
-              <h3 class="diagnose-result-name" id="diagnose-result-name"></h3>
+              <h3 class="diagnose-result-name" id="diagnose-result-name" tabindex="-1"></h3>
               <p class="diagnose-result-tag" id="diagnose-result-tag"></p>
               <p class="diagnose-result-note" id="diagnose-result-note"></p>
               <div class="diagnose-result-actions">
+                <button type="button" class="btn btn-ghost magnetic" id="diagnose-share" hidden>
+                  結果をシェア
+                </button>
                 <button type="button" class="btn btn-ghost magnetic" id="diagnose-retry">
                   もういちど診断
                 </button>
@@ -532,10 +687,13 @@
             <p class="form-hint">
               本名・住所・連絡先、きついことばは使えません。ちかいはメインのはにわうしろに浮かびます。
             </p>
-            <button type="submit" class="btn btn-primary btn-wide magnetic">
+            <button type="submit" class="btn btn-primary btn-wide magnetic" id="join-submit">
               はにわとして立つ
             </button>
             <p class="form-note" id="form-note" role="status" aria-live="polite"></p>
+            <p class="form-followup" id="form-followup" hidden>
+              <a class="btn btn-ghost magnetic" href="#top">丘でちかいを見る</a>
+            </p>
           </form>
         </div>
         <canvas class="burst-canvas" id="burst-canvas" aria-hidden="true"></canvas>
@@ -553,6 +711,6 @@
       </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
   </body>
 </html>
